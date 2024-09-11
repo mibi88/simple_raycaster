@@ -122,7 +122,7 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
         /* Handle events */
         while(SDL_PollEvent(&event)){
             if(event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-                puts("[render] The window size changed !");
+                puts("[render] The window size changed!");
                 SDL_GetRendererOutputSize(renderer->renderer ,&w, &h);
                 xscale = (float)w/(float)renderer->w;
                 yscale = (float)h/(float)renderer->h;
