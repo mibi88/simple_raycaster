@@ -166,28 +166,43 @@ void render_map(void) {
 #endif
 }
 
+/* See https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line */
+float dist(Vector2 p1, Vector2 p2, Vector2 p3) {
+    return fabs((p2.y-p1.y)*p3.x-(p2.x-p1.x)*p3.y+p2.x*p1.y-p2.y*p1.x)/
+           sqrt((p2.x-p1.x)*(p2.x-p1.x)+(p2.y-p1.y)*(p2.y-p1.y));
+}
+
 void render_world(void) {
     int i;
     int p;
     int c;
+    float depth;
     RayEnd end;
     Vector2 fovstart;
     Vector2 fovend;
     Vector2 inc;
+    Vector2 dest;
+    Vector2 endpos;
+    Vector2 start = {0, 0};
     fovstart.x = cos((pr-FOV/2)/180*PI)*LEN;
     fovstart.y = sin((pr-FOV/2)/180*PI)*LEN;
     fovend.x = cos((pr+FOV/2)/180*PI)*LEN;
     fovend.y = sin((pr+FOV/2)/180*PI)*LEN;
     inc.x = (fovend.x-fovstart.x)/RAYS;
     inc.y = (fovend.y-fovstart.y)/RAYS;
+    dest.x = sin((pr)/180*PI);
+    dest.y = cos((pr)/180*PI);
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
     for(i=0,p=0;i<RAYS;i++,p+=SCREEN_WIDTH/RAYS){
         end = raycast(px, py, px+px+fovstart.x+inc.x*i, py+fovstart.y+inc.y*i);
         if(fisheye_fix) end.len *= cos(i/180*PI);
+        endpos.x = cos((pr)/180*PI)*end.len;
+        endpos.y = sin((pr)/180*PI)*end.len;
+        depth = dist(start, dest, endpos);
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-            vline(end.len/LEN*SCREEN_HEIGHT,
-                  SCREEN_HEIGHT-end.len/LEN*SCREEN_HEIGHT, p+c,
-                  0, 255-(end.len/LEN*255), 0);
+            vline(depth/LEN*SCREEN_HEIGHT,
+                  SCREEN_HEIGHT-depth/LEN*SCREEN_HEIGHT, p+c,
+                  0, 255-(depth/LEN*255), 0);
         }
     }
 }
