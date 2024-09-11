@@ -167,14 +167,22 @@ void render_map(void) {
 }
 
 void render_world(void) {
-    float i;
+    int i;
     int p;
     int c;
     RayEnd end;
+    Vector2 fovstart;
+    Vector2 fovend;
+    Vector2 inc;
+    fovstart.x = cos((pr-FOV/2)/180*PI)*LEN;
+    fovstart.y = sin((pr-FOV/2)/180*PI)*LEN;
+    fovend.x = cos((pr+FOV/2)/180*PI)*LEN;
+    fovend.y = sin((pr+FOV/2)/180*PI)*LEN;
+    inc.x = (fovend.x-fovstart.x)/RAYS;
+    inc.y = (fovend.y-fovstart.y)/RAYS;
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
-    for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
-        end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
-                      py+sin((pr+i)/180*PI)*LEN);
+    for(i=0,p=0;i<RAYS;i++,p+=SCREEN_WIDTH/RAYS){
+        end = raycast(px, py, px+px+fovstart.x+inc.x*i, py+fovstart.y+inc.y*i);
         if(fisheye_fix) end.len *= cos(i/180*PI);
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
             vline(end.len/LEN*SCREEN_HEIGHT,
