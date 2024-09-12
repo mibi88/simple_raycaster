@@ -41,6 +41,9 @@
 #define MAP_WIDTH  8
 #define MAP_HEIGHT 8
 
+#define TEX_WIDTH  8
+#define TEX_HEIGHT 8
+
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
 
@@ -57,6 +60,8 @@
 #define RAYS SCREEN_WIDTH
 #define FOV  60
 
+#define TEXTURE 0
+
 typedef struct {
     float x, y;
 } Vector2;
@@ -66,6 +71,7 @@ typedef struct {
     int cx, cy;
     unsigned char hit;
     char c;
+    char x_axis_hit;
 } RayEnd;
 
 Renderer renderer;
@@ -76,6 +82,15 @@ char map[MAP_WIDTH*MAP_HEIGHT] = "########"
                                  "###    #"
                                  "#      #"
                                  "#  #   #"
+                                 "#      #"
+                                 "########";
+
+char tex[TEX_WIDTH*TEX_HEIGHT] = "########"
+                                 "#      #"
+                                 "#      #"
+                                 "#      #"
+                                 "#      #"
+                                 "#      #"
                                  "#      #"
                                  "########";
 
@@ -98,6 +113,21 @@ void vline(int y1, int y2, int x, int r, int g, int b) {
         render_set_pixel(&renderer, x, y, r, g, b, 255);
     }
 }
+
+#if TEXTURE
+void texline(int y1, int y2, int x, int l) {
+    int y;
+    int c;
+    int p;
+    int n;
+    float texinc = TEX_HEIGHT/fabs(y2-y1);
+    for(n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++){
+        p = texinc*n;
+        c = 128+(tex[p*TEX_WIDTH+l] == ' ')*127;
+        render_set_pixel(&renderer, x, y, c, c, c, 255);
+    }
+}
+#endif
 
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
@@ -171,6 +201,7 @@ void render_world(void) {
     int p;
     int c;
     float h;
+    float l;
     RayEnd end;
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
     for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
@@ -180,9 +211,25 @@ void render_world(void) {
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
             h = SCREEN_HEIGHT/end.len;
             if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
+#if TEXTURE
+            if(end.x_axis_hit){
+                l = px+cos((pr+i)/180*PI)*LEN;
+                l = l-floor(l);
+                l *= TEX_WIDTH;
+            }else{
+                l = py+sin((pr+i)/180*PI)*LEN;
+                l = l-floor(l);
+                l *= TEX_WIDTH;
+            }
+            texline(SCREEN_HEIGHT/2-h/2,
+                    SCREEN_HEIGHT/2+h/2, p+c,
+                    l);
+#else
             vline(SCREEN_HEIGHT/2-h/2,
                   SCREEN_HEIGHT/2+h/2, p+c,
-                  0, 255-(end.len/LEN*255), 0);
+                  (255-(end.len/LEN*255))*(!end.x_axis_hit),
+                  (255-(end.len/LEN*255))*end.x_axis_hit, 0);
+#endif
         }
     }
 }
@@ -221,16 +268,20 @@ RayEnd raycast(float x1, float y1, float x2, float y2) {
     rays.x = steplen.x*start.x;
     if(rays.x < rays.y){
         end.len = rays.x;
+        end.x_axis_hit = 1;
     }else{
         end.len = rays.y;
+        end.x_axis_hit = 0;
     }
     while(end.len < LEN){
         if(rays.x < rays.y){
             px += x1 < x2 ? 1 : -1;
             rays.x += steplen.x;
+            end.x_axis_hit = 0;
         }else{
             py += y1 < y2 ? 1 : -1;
             rays.y += steplen.y;
+            end.x_axis_hit = 1;
         }
         if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
             end.cx = px;
