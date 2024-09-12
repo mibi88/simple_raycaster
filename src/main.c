@@ -263,14 +263,19 @@ void loop(int fps) {
         oldx = px;
         oldy = py;
         px += cos(pr/180*PI)*(SPEED/(float)fps);
-        py += sin(pr/180*PI)*(SPEED/(float)fps);
         if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
             if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
                 px = oldx;
-                py = oldy;
             }
         }else{
             px = oldx;
+        }
+        py += sin(pr/180*PI)*(SPEED/(float)fps);
+        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
+            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+                py = oldy;
+            }
+        }else{
             py = oldy;
         }
     }
@@ -278,14 +283,19 @@ void loop(int fps) {
         oldx = px;
         oldy = py;
         px -= cos(pr/180*PI)*(SPEED/(float)fps);
-        py -= sin(pr/180*PI)*(SPEED/(float)fps);
         if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
             if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
                 px = oldx;
-                py = oldy;
             }
         }else{
             px = oldx;
+        }
+        py -= sin(pr/180*PI)*(SPEED/(float)fps);
+        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
+            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+                py = oldy;
+            }
+        }else{
             py = oldy;
         }
     }
