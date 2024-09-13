@@ -38,8 +38,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAP_WIDTH  8
-#define MAP_HEIGHT 8
+#define MAP_WIDTH  32
+#define MAP_HEIGHT 32
 
 #include <wall.h>
 
@@ -47,7 +47,7 @@
 #define SCREEN_HEIGHT 480
 
 #define SCALE 64
-#define LEN 15
+#define LEN 25
 
 #define SPEED 5
 #define ROTSPEED 100
@@ -75,14 +75,38 @@ typedef struct {
 
 Renderer renderer;
 
-char map[MAP_WIDTH*MAP_HEIGHT] = "########"
-                                 "#  #   #"
-                                 "#      #"
-                                 "###    #"
-                                 "#      #"
-                                 "#  #   #"
-                                 "#      #"
-                                 "########";
+char map[MAP_WIDTH*MAP_HEIGHT] = "################################"
+                                 "#  #   #                       #"
+                                 "#      #                       #"
+                                 "###    #           #           #"
+                                 "#      #           #           #"
+                                 "#  #   #        #  #  #        #"
+                                 "#                # # #         #"
+                                 "########          ###          #"
+                                 "#                  #           #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                #             #"
+                                 "#               #              #"
+                                 "#              #               #"
+                                 "#             #                #"
+                                 "#            #                 #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                #     #       #"
+                                 "#                              #"
+                                 "#               #       #      #"
+                                 "#                #     #       #"
+                                 "#                 #####        #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "#                              #"
+                                 "################################";
 
 /* Player */
 float px = 1.5;
@@ -210,10 +234,15 @@ void render_world(void) {
     float no_clip_h;
     RayEnd end;
     Texture *tex;
-    rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
     for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
         end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
                       py+sin((pr+i)/180*PI)*LEN);
+        if(!end.hit){
+            for(c=0;c<SCREEN_WIDTH/RAYS;c++){
+                vline(0, SCREEN_HEIGHT, p+c, 0, 0, 0);
+            }
+            continue;
+        }
         tex = get_tile_tex(end.cx, end.cy);
         if(end.x_axis_hit){
             l = px+cos((pr+i)/180*PI)*end.len;
@@ -226,15 +255,16 @@ void render_world(void) {
         }
         if(fisheye_fix) end.len *= cos(i/180*PI);
         h = SCREEN_HEIGHT/end.len;
+        no_clip_h = h;
+        if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
+            vline(0, SCREEN_HEIGHT/2-h/2, p+c, 0, 0, 0);
+            vline(SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT, p+c, 0, 0, 0);
 #if TEXTURE
-            no_clip_h = h;
-            if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
             texline(tex, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, 
                     SCREEN_HEIGHT/2-no_clip_h/2, SCREEN_HEIGHT/2+no_clip_h/2,
                     p+c, l, 255-(end.len/LEN*255));
 #else
-            if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
             vline(SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, p+c,
                   (255-(end.len/LEN*255))*(!end.x_axis_hit),
                   (255-(end.len/LEN*255))*end.x_axis_hit, 0);
