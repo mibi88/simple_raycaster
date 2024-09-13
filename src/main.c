@@ -60,7 +60,7 @@
 #define RAYS SCREEN_WIDTH
 #define FOV  60
 
-#define TEXTURE 0
+#define TEXTURE 1
 
 typedef struct {
     float x, y;
@@ -121,8 +121,12 @@ void texline(int y1, int y2, int x, int l) {
     int p;
     int n;
     float texinc = TEX_HEIGHT/fabs(y2-y1);
+    if(l >= TEX_WIDTH) l = TEX_WIDTH-1;
+    else if(l < 0) l = 0;
     for(n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++){
         p = texinc*n;
+        if(p < 0) p = 0;
+        else if(p >= TEX_HEIGHT) p = TEX_HEIGHT-1;
         c = 128+(tex[p*TEX_WIDTH+l] == ' ')*127;
         render_set_pixel(&renderer, x, y, c, c, c, 255);
     }
@@ -207,24 +211,25 @@ void render_world(void) {
     for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
         end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
                       py+sin((pr+i)/180*PI)*LEN);
+        if(end.x_axis_hit){
+            l = px+cos((pr+i)/180*PI)*end.len;
+            l = l-floor(l);
+            l *= TEX_WIDTH;
+        }else{
+            l = py+sin((pr+i)/180*PI)*end.len;
+            l = l-floor(l);
+            l *= TEX_WIDTH;
+        }
         if(fisheye_fix) end.len *= cos(i/180*PI);
+        h = SCREEN_HEIGHT/end.len;
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-            h = SCREEN_HEIGHT/end.len;
-            if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
 #if TEXTURE
-            if(end.x_axis_hit){
-                l = px+cos((pr+i)/180*PI)*LEN;
-                l = l-floor(l);
-                l *= TEX_WIDTH;
-            }else{
-                l = py+sin((pr+i)/180*PI)*LEN;
-                l = l-floor(l);
-                l *= TEX_WIDTH;
-            }
+            
             texline(SCREEN_HEIGHT/2-h/2,
                     SCREEN_HEIGHT/2+h/2, p+c,
                     l);
 #else
+            if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
             vline(SCREEN_HEIGHT/2-h/2,
                   SCREEN_HEIGHT/2+h/2, p+c,
                   (255-(end.len/LEN*255))*(!end.x_axis_hit),
