@@ -41,8 +41,7 @@
 #define MAP_WIDTH  8
 #define MAP_HEIGHT 8
 
-#define TEX_WIDTH  8
-#define TEX_HEIGHT 8
+#include <wall.h>
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
@@ -85,15 +84,6 @@ char map[MAP_WIDTH*MAP_HEIGHT] = "########"
                                  "#      #"
                                  "########";
 
-char tex[TEX_WIDTH*TEX_HEIGHT] = "########"
-                                 "#      #"
-                                 "#      #"
-                                 "#      #"
-                                 "#      #"
-                                 "#      #"
-                                 "#      #"
-                                 "########";
-
 /* Player */
 float px = 1.5;
 float py = 1.5;
@@ -115,20 +105,23 @@ void vline(int y1, int y2, int x, int r, int g, int b) {
 }
 
 #if TEXTURE
-void texline(int y1, int y2, int x, int l) {
+void texline(int y1, int y2, int ty1, int ty2, int x, int l) {
     int y;
-    int c;
+    int r, g, b;
     int p;
     int n;
-    float texinc = TEX_HEIGHT/fabs(y2-y1);
-    if(l >= TEX_WIDTH) l = TEX_WIDTH-1;
+    int t;
+    float texinc = WALL_HEIGHT/fabs(ty2-ty1);
+    if(l >= WALL_WIDTH) l = WALL_WIDTH-1;
     else if(l < 0) l = 0;
-    for(n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++){
-        p = texinc*n;
+    for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
+        p = texinc*t;
         if(p < 0) p = 0;
-        else if(p >= TEX_HEIGHT) p = TEX_HEIGHT-1;
-        c = 128+(tex[p*TEX_WIDTH+l] == ' ')*127;
-        render_set_pixel(&renderer, x, y, c, c, c, 255);
+        else if(p >= WALL_HEIGHT) p = WALL_HEIGHT-1;
+        r = wall[p*WALL_WIDTH+l]>>24;
+        g = (wall[p*WALL_WIDTH+l]>>16)&0xFF;
+        b = (wall[p*WALL_WIDTH+l]>>8)&0xFF;
+        render_set_pixel(&renderer, x, y, r, g, b, 255);
     }
 }
 #endif
@@ -206,6 +199,7 @@ void render_world(void) {
     int c;
     float h;
     float l;
+    float no_clip_h;
     RayEnd end;
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
     for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
@@ -214,19 +208,23 @@ void render_world(void) {
         if(end.x_axis_hit){
             l = px+cos((pr+i)/180*PI)*end.len;
             l = l-floor(l);
-            l *= TEX_WIDTH;
+            l *= WALL_WIDTH;
         }else{
             l = py+sin((pr+i)/180*PI)*end.len;
             l = l-floor(l);
-            l *= TEX_WIDTH;
+            l *= WALL_WIDTH;
         }
         if(fisheye_fix) end.len *= cos(i/180*PI);
         h = SCREEN_HEIGHT/end.len;
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
 #if TEXTURE
-            
+            no_clip_h = h;
+            if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
             texline(SCREEN_HEIGHT/2-h/2,
-                    SCREEN_HEIGHT/2+h/2, p+c,
+                    SCREEN_HEIGHT/2+h/2, 
+                    SCREEN_HEIGHT/2-no_clip_h/2,
+                    SCREEN_HEIGHT/2+no_clip_h/2,
+                    p+c,
                     l);
 #else
             if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;

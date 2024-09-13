@@ -2,5 +2,9 @@
 
 src="src/render.c src/main.c"
 
-cc $src -o main -Wall -Wextra -Wpedantic -g -Isrc -lSDL2 -lm -ansi
+mkdir -p conv
+
+python3 src/texgen.py assets/wall.png > conv/wall.h
+
+cc $src -o main -Wall -Wextra -Wpedantic -g -Isrc -Iconv -lSDL2 -lm -ansi
 
