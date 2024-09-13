@@ -46,7 +46,7 @@
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
 
-#define SCALE 64
+#define SCALE 8
 #define LEN 25
 
 #define SPEED 5
