@@ -97,6 +97,10 @@ char fisheye_fix = 0;
 
 char map_view = 1;
 
+Texture *get_tile_tex(int cx, int cy) {
+    return &wall;
+}
+
 void vline(int y1, int y2, int x, int r, int g, int b) {
     int y;
     for(y=y1;y<y2;y+=y1<y2 ? 1 : -1){
@@ -105,22 +109,26 @@ void vline(int y1, int y2, int x, int r, int g, int b) {
 }
 
 #if TEXTURE
-void texline(int y1, int y2, int ty1, int ty2, int x, int l) {
+void texline(Texture *tex, int y1, int y2, int ty1, int ty2, int x, int l,
+             int fog) {
     int y;
     int r, g, b;
     int p;
     int n;
     int t;
-    float texinc = WALL_HEIGHT/fabs(ty2-ty1);
-    if(l >= WALL_WIDTH) l = WALL_WIDTH-1;
+    float texinc = tex->height/fabs(ty2-ty1);
+    if(l >= tex->width) l = tex->width-1;
     else if(l < 0) l = 0;
     for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
         p = texinc*t;
         if(p < 0) p = 0;
-        else if(p >= WALL_HEIGHT) p = WALL_HEIGHT-1;
-        r = wall[p*WALL_WIDTH+l]>>24;
-        g = (wall[p*WALL_WIDTH+l]>>16)&0xFF;
-        b = (wall[p*WALL_WIDTH+l]>>8)&0xFF;
+        else if(p >= tex->height) p = tex->height-1;
+        r = tex->data[p*tex->width+l]>>24;
+        g = (tex->data[p*tex->width+l]>>16)&0xFF;
+        b = (tex->data[p*tex->width+l]>>8)&0xFF;
+        r = (float)r/255*fog;
+        g = (float)g/255*fog;
+        b = (float)b/255*fog;
         render_set_pixel(&renderer, x, y, r, g, b, 255);
     }
 }
@@ -201,18 +209,20 @@ void render_world(void) {
     float l;
     float no_clip_h;
     RayEnd end;
+    Texture *tex;
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0);
     for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
         end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
                       py+sin((pr+i)/180*PI)*LEN);
+        tex = get_tile_tex(end.cx, end.cy);
         if(end.x_axis_hit){
             l = px+cos((pr+i)/180*PI)*end.len;
             l = l-floor(l);
-            l *= WALL_WIDTH;
+            l *= tex->width;
         }else{
             l = py+sin((pr+i)/180*PI)*end.len;
             l = l-floor(l);
-            l *= WALL_WIDTH;
+            l *= tex->width;
         }
         if(fisheye_fix) end.len *= cos(i/180*PI);
         h = SCREEN_HEIGHT/end.len;
@@ -220,16 +230,12 @@ void render_world(void) {
 #if TEXTURE
             no_clip_h = h;
             if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
-            texline(SCREEN_HEIGHT/2-h/2,
-                    SCREEN_HEIGHT/2+h/2, 
-                    SCREEN_HEIGHT/2-no_clip_h/2,
-                    SCREEN_HEIGHT/2+no_clip_h/2,
-                    p+c,
-                    l);
+            texline(tex, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, 
+                    SCREEN_HEIGHT/2-no_clip_h/2, SCREEN_HEIGHT/2+no_clip_h/2,
+                    p+c, l, 255-(end.len/LEN*255));
 #else
             if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
-            vline(SCREEN_HEIGHT/2-h/2,
-                  SCREEN_HEIGHT/2+h/2, p+c,
+            vline(SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, p+c,
                   (255-(end.len/LEN*255))*(!end.x_axis_hit),
                   (255-(end.len/LEN*255))*end.x_axis_hit, 0);
 #endif

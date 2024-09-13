@@ -35,11 +35,13 @@ from PIL import Image
 import sys
 import os
 
-if len(sys.argv) < 2:
-    sys.stderr.write("USAGE: texgen [FILE]\n")
+if len(sys.argv) < 4:
+    sys.stderr.write("USAGE: texgen [FILE] [C SOURCE] [C HEADER]\n")
     sys.exit(1)
 
 infile = sys.argv[1]
+source = sys.argv[2]
+header = sys.argv[3]
 
 name = os.path.splitext(os.path.basename(infile))[0]
 
@@ -54,10 +56,9 @@ for y in range(h):
         pixel = img.getpixel((x, y))
         pxlist.append(pixel[0]<<24|pixel[1]<<16|pixel[2]<<8|pixel[3])
 
-out = f"""#define {name.upper()}_WIDTH {w}
-#define {name.upper()}_HEIGHT {h}
+out = f"""#include <texture.h>
 
-unsigned int {name.lower()}[{name.upper()}_WIDTH*{name.upper()}_HEIGHT] = {{
+const unsigned int {name.lower()}_data[{w*h}] = {{
 """
 
 INDENT = 4
@@ -80,9 +81,25 @@ for n in range(len(pxlist)):
     out += string
     column += len(string)
 
-out += """
-};
+out += f"""
+}};
+
+Texture {name.lower()} = {{{name.lower()}_data, {w}, {h}}};\n
 """
 
-sys.stdout.write(out)
+with open(source, "w") as fp:
+    fp.write(out)
+
+out = f"""#ifndef {name.upper()}_H
+#define {name.upper()}_H
+
+#include <texture.h>
+
+extern Texture {name.lower()};
+
+#endif\n
+"""
+
+with open(header, "w") as fp:
+    fp.write(out)
 
