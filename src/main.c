@@ -33,8 +33,8 @@
  */
 
 #include <render.h>
+#include <fixed.h>
 
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -61,12 +61,14 @@
 
 #define TEXTURE 1
 
+#define COLLISIONS 1
+
 typedef struct {
-    float x, y;
+    fixed_t x, y;
 } Vector2;
 
 typedef struct {
-    float len;
+    fixed_t len;
     int cx, cy;
     unsigned char hit;
     char c;
@@ -109,9 +111,9 @@ char map[MAP_WIDTH*MAP_HEIGHT] = "################################"
                                  "################################";
 
 /* Player */
-float px = 1.5;
-float py = 1.5;
-float pr = 45;
+fixed_t px = TO_FIXED(1.5);
+fixed_t py = TO_FIXED(1.5);
+fixed_t pr = TO_FIXED(45);
 /* ------ */
 
 char lock = 0;
@@ -132,6 +134,8 @@ void vline(int y1, int y2, int x, int r, int g, int b) {
     }
 }
 
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
 #if TEXTURE
 void texline(Texture *tex, int y1, int y2, int ty1, int ty2, int x, int l,
              int fog) {
@@ -140,25 +144,24 @@ void texline(Texture *tex, int y1, int y2, int ty1, int ty2, int x, int l,
     int p;
     int n;
     int t;
-    float texinc = tex->height/fabs(ty2-ty1);
+    fixed_t h = ABS(TO_FIXED(ty2)-TO_FIXED(ty1));
+    fixed_t texinc = DIV(TO_FIXED(tex->height), (h ? h : 1));
     if(l >= tex->width) l = tex->width-1;
     else if(l < 0) l = 0;
     for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
-        p = texinc*t;
+        p = TO_INT(texinc*t);
         if(p < 0) p = 0;
         else if(p >= tex->height) p = tex->height-1;
         r = tex->data[p*tex->width+l]>>24;
         g = (tex->data[p*tex->width+l]>>16)&0xFF;
         b = (tex->data[p*tex->width+l]>>8)&0xFF;
-        r = (float)r/255*fog;
-        g = (float)g/255*fog;
-        b = (float)b/255*fog;
+        r = TO_INT(TO_FIXED(r)/255*fog);
+        g = TO_INT(TO_FIXED(g)/255*fog);
+        b = TO_INT(TO_FIXED(b)/255*fog);
         render_set_pixel(&renderer, x, y, r, g, b, 255);
     }
 }
 #endif
-
-#define ABS(x) ((x) < 0 ? -(x) : (x))
 
 void line(int x1, int y1, int x2, int y2, int r, int g, int b) {
     int dx = ABS(x2-x1);
@@ -199,11 +202,11 @@ void rect(int sx, int sy, int w, int h, int r, int g, int b){
     }
 }
 
-RayEnd raycast(float x1, float y1, float x2, float y2);
+RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 void render_map(void) {
     int x, y;
-    float i;
+    fixed_t i;
     RayEnd end;
     for(y=0;y<MAP_HEIGHT;y++){
         for(x=0;x<MAP_WIDTH;x++){
@@ -212,31 +215,32 @@ void render_map(void) {
             }
         }
     }
-    for(i=-(FOV/2);i<FOV/2;i+=FOV/(float)RAYS){
-        end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
-                      py+sin((pr+i)/180*PI)*LEN);
-        if(fisheye_fix) end.len *= cos(i/180*PI);
-        line(px*SCALE, py*SCALE, (px+cos((pr+i)/180*PI)*end.len)*SCALE,
-             (py+sin((pr+i)/180*PI)*end.len)*SCALE, 0, 255, 0);
+    for(i=-(TO_FIXED(FOV)/2);i<TO_FIXED(FOV)/2;i+=TO_FIXED(FOV)/RAYS){
+        end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
+        /*printf("%f\n", end.len/(float)(1<<PRECISION));*/
+        if(fisheye_fix) end.len = MUL(end.len, dcos(i));
+        line(TO_INT(px*SCALE), TO_INT(py*SCALE),
+             TO_INT((px+MUL(dcos(pr+i), end.len))*SCALE),
+             TO_INT((py+MUL(dsin(pr+i), end.len))*SCALE), 0, 255, 0);
     }
 #if SHOWPLAYER
-    line(px*SCALE, py*SCALE, (px+cos(pr/180*PI))*SCALE,
-         (py+sin(pr/180*PI))*SCALE, 255, 0, 0);
+    line(TO_INT(px*SCALE), TO_INT(py*SCALE), TO_INT((px+dcos(pr))*SCALE),
+         TO_INT((py+dsin(pr))*SCALE), 255, 0, 0);
 #endif
 }
 
 void render_world(void) {
-    float i;
+    fixed_t i;
     int p;
     int c;
-    float h;
-    float l;
-    float no_clip_h;
+    int h;
+    fixed_t l;
+    int no_clip_h;
     RayEnd end;
     Texture *tex;
-    for(i=-(FOV/2),p=0;i<FOV/2;i+=FOV/(float)RAYS,p+=SCREEN_WIDTH/RAYS){
-        end = raycast(px, py, px+cos((pr+i)/180*PI)*LEN,
-                      py+sin((pr+i)/180*PI)*LEN);
+    for(i=-(TO_FIXED(FOV)/2),p=0;i<TO_FIXED(FOV)/2;i+=TO_FIXED(FOV)/RAYS,
+        p+=SCREEN_WIDTH/RAYS){
+        end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
         if(!end.hit){
             for(c=0;c<SCREEN_WIDTH/RAYS;c++){
                 vline(0, SCREEN_HEIGHT, p+c, 0, 0, 0);
@@ -245,16 +249,16 @@ void render_world(void) {
         }
         tex = get_tile_tex(end.cx, end.cy);
         if(end.x_axis_hit){
-            l = px+cos((pr+i)/180*PI)*end.len;
-            l = l-floor(l);
+            l = px+MUL(dcos(pr+i), end.len);
+            l = l-FLOOR(l);
             l *= tex->width;
         }else{
-            l = py+sin((pr+i)/180*PI)*end.len;
-            l = l-floor(l);
+            l = py+MUL(dsin(pr+i), end.len);
+            l = l-FLOOR(l);
             l *= tex->width;
         }
-        if(fisheye_fix) end.len *= cos(i/180*PI);
-        h = SCREEN_HEIGHT/end.len;
+        if(fisheye_fix) end.len = MUL(end.len, dcos(i));
+        h = TO_INT(DIV(TO_FIXED(SCREEN_HEIGHT), (end.len ? end.len : 1)));
         no_clip_h = h;
         if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
@@ -263,48 +267,48 @@ void render_world(void) {
 #if TEXTURE
             texline(tex, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, 
                     SCREEN_HEIGHT/2-no_clip_h/2, SCREEN_HEIGHT/2+no_clip_h/2,
-                    p+c, l, 255-(end.len/LEN*255));
+                    p+c, TO_INT(l), 255-TO_INT(end.len/LEN*255));
 #else
             vline(SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, p+c,
-                  (255-(end.len/LEN*255))*(!end.x_axis_hit),
-                  (255-(end.len/LEN*255))*end.x_axis_hit, 0);
+                  (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
+                  (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
 #endif
         }
     }
 }
 
-RayEnd raycast(float x1, float y1, float x2, float y2) {
-    int px = x1;
-    int py = y1;
-    float tmp;
+RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) {
+    int px = TO_INT(x1);
+    int py = TO_INT(y1);
+    fixed_t tmp;
     RayEnd end;
     Vector2 rays;
     Vector2 raystep;
     Vector2 steplen;
     Vector2 start;
-    tmp = fabs(x2-x1);
-    if(tmp) raystep.x = (y2-y1)/tmp;
+    tmp = ABS(x2-x1);
+    if(tmp) raystep.x = DIV((y2-y1), tmp);
     else raystep.x = (y2-y1);
-    steplen.x = sqrt(raystep.x*raystep.x+1);
-    tmp = fabs(y2-y1);
-    if(tmp) raystep.y = (x2-x1)/tmp;
+    steplen.x = fsqrt(MUL(raystep.x, raystep.x)+TO_FIXED(1));
+    tmp = ABS(y2-y1);
+    if(tmp) raystep.y = DIV((x2-x1), tmp);
     else raystep.y = (x2-x1);
-    steplen.y = sqrt(raystep.y*raystep.y+1);
+    steplen.y = fsqrt(MUL(raystep.y, raystep.y)+TO_FIXED(1));
     end.hit = 0;
     /* Calculate start */
     if(x1 < x2){
-        start.x = 1-(x1-floor(x1));
+        start.x = TO_FIXED(1)-(x1-FLOOR(x1));
     }else{
-        start.x = x1-floor(x1);
+        start.x = x1-FLOOR(x1);
     }
     if(y1 < y2){
-        start.y = 1-(y1-floor(y1));
+        start.y = TO_FIXED(1)-(y1-FLOOR(y1));
     }else{
-        start.y = y1-floor(y1);
+        start.y = y1-FLOOR(y1);
     }
     /* --------------- */
-    rays.y = steplen.y*start.y;
-    rays.x = steplen.x*start.x;
+    rays.y = MUL(steplen.y, start.y);
+    rays.x = MUL(steplen.x, start.x);
     if(rays.x < rays.y){
         end.len = rays.x;
         end.x_axis_hit = 1;
@@ -312,7 +316,8 @@ RayEnd raycast(float x1, float y1, float x2, float y2) {
         end.len = rays.y;
         end.x_axis_hit = 0;
     }
-    while(end.len < LEN){
+    while(end.len < TO_FIXED(LEN)){
+        /*rect(px*SCALE, py*SCALE, SCALE, SCALE, 127, 127, 255);*/
         if(rays.x < rays.y){
             px += x1 < x2 ? 1 : -1;
             rays.x += steplen.x;
@@ -330,6 +335,9 @@ RayEnd raycast(float x1, float y1, float x2, float y2) {
                 break;
             }
         }else{
+            end.cx = px;
+            end.cy = py;
+            end.hit = 0;
             break;
         }
         if(rays.x < rays.y){
@@ -343,51 +351,68 @@ RayEnd raycast(float x1, float y1, float x2, float y2) {
 
 void loop(int fps) {
     RayEnd end;
-    float oldx;
-    float oldy;
+    fixed_t oldx;
+    fixed_t oldy;
+    int tx, ty;
     printf("FPS: %d    \r", fps);
     fflush(stdout);
-    if(render_keydown(&renderer, KEY_LEFT)) pr -= ROTSPEED/(float)fps;
-    if(render_keydown(&renderer, KEY_RIGHT)) pr += ROTSPEED/(float)fps;
+    if(render_keydown(&renderer, KEY_LEFT)) pr -= TO_FIXED(ROTSPEED)/fps;
+    if(render_keydown(&renderer, KEY_RIGHT)) pr += TO_FIXED(ROTSPEED)/fps;
     if(render_keydown(&renderer, KEY_UP)){
         oldx = px;
         oldy = py;
-        px += cos(pr/180*PI)*(SPEED/(float)fps);
-        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
-            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+        px += MUL(dcos(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+#if COLLISIONS
+        tx = TO_INT(px);
+        ty = TO_INT(py);
+        if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
+            if(map[ty*MAP_WIDTH+tx] != ' '){
                 px = oldx;
             }
         }else{
             px = oldx;
         }
-        py += sin(pr/180*PI)*(SPEED/(float)fps);
-        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
-            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+#endif
+        py += MUL(dsin(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+#if COLLISIONS
+        tx = TO_INT(px);
+        ty = TO_INT(py);
+        if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
+            if(map[ty*MAP_WIDTH+tx] != ' '){
                 py = oldy;
             }
         }else{
             py = oldy;
         }
+#endif
     }
     if(render_keydown(&renderer, KEY_DOWN)){
         oldx = px;
         oldy = py;
-        px -= cos(pr/180*PI)*(SPEED/(float)fps);
-        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
-            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+        px -= MUL(dcos(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+#if COLLISIONS
+        tx = TO_INT(px);
+        ty = TO_INT(py);
+        if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
+            if(map[ty*MAP_WIDTH+tx] != ' '){
                 px = oldx;
             }
         }else{
             px = oldx;
         }
-        py -= sin(pr/180*PI)*(SPEED/(float)fps);
-        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
-            if(map[(int)py*MAP_WIDTH+(int)px] != ' '){
+#endif
+        py -= MUL(dsin(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+#if COLLISIONS
+        tx = TO_INT(px);
+        ty = TO_INT(py);
+        if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
+            if(map[ty*MAP_WIDTH+tx] != ' '){
                 py = oldy;
             }
         }else{
             py = oldy;
         }
+#endif
     }
     if(!lock){
         if(render_keydown(&renderer, KEY_LCTRL)){

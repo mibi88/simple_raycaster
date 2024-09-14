@@ -142,6 +142,7 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
         /* Handle time and call loop_function */
         _last_t = SDL_GetTicks();
         loop_function(renderer->fps ? renderer->fps : 1);
+        /*while(SDL_GetTicks() - _last_t < 20);*/
         time = SDL_GetTicks() - _last_t;
         time = time ? time : 1;
         renderer->fps = 1000/time;
