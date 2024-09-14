@@ -43,6 +43,7 @@ typedef int64_t fixed_t;
 /* The precision of the fixed point numbers. */
 #define PRECISION 15
 
+/* The number of iterations when calculating the square root */
 #define SQRT_PRECISION 10
 
 /* Convert a float to a fixed point number. */
@@ -52,8 +53,10 @@ typedef int64_t fixed_t;
 /* Multiply two fixed point numbers together. */
 #define MUL(a, b) (((a)*(b))>>PRECISION)
 
+/* Divide the fixed point number a by the fixed point number b. */
 #define DIV(a, b) (((a)<<PRECISION)/(b))
 
+/* Fixed point floor function. */
 #define FLOOR(num) (num&~((1<<PRECISION)-1))
 
 /* See
@@ -65,6 +68,9 @@ fixed_t dcos(fixed_t d);
 
 fixed_t dtan(fixed_t d);
 
+/* Using Heron's method with a binary initial estimate. See
+ * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots
+ */
 fixed_t fsqrt(fixed_t n);
 
 #endif
