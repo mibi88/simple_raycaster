@@ -43,6 +43,8 @@ typedef int64_t fixed_t;
 /* The precision of the fixed point numbers. */
 #define PRECISION 15
 
+#define SQRT_PRECISION 10
+
 /* Convert a float to a fixed point number. */
 #define TO_FIXED(num) (fixed_t)((num)*(fixed_t)(1<<PRECISION))
 /* Convert a fixed point number to an integer. */

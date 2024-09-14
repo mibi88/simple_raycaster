@@ -33,7 +33,7 @@
  */
 
 #include <fixed.h>
-#include <math.h>
+#include <stdio.h>
 
 /* See
  * https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula.
@@ -58,7 +58,28 @@ fixed_t dtan(fixed_t d) {
     return dsin(d)/dcos(d);
 }
 
-fixed_t fsqrt(fixed_t n) {
-    return TO_FIXED(sqrt(n/(float)(1<<PRECISION)));
+#define HALF (1<<PRECISION>>1)
+
+fixed_t fsqrt(fixed_t x) {
+    int i = 0;
+    fixed_t n = 1;
+    fixed_t a = x;
+    fixed_t rx;
+    fixed_t lx;
+    while(n < x && i < 64){
+        n <<= 1;
+        a >>= 1;
+        i++;
+    }
+    lx = MUL((HALF+MUL(HALF, a)), n);
+    if(!lx){
+        lx = 1;
+    }
+    for(i=0;i<SQRT_PRECISION;i++){
+        rx = MUL(HALF, (lx+DIV(x, lx)));
+        lx = rx;
+        if(!lx) lx = 1;
+    }
+    return lx;
 }
 
