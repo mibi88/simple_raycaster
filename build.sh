@@ -1,6 +1,6 @@
 #!/bin/sh
 
-src="src/render.c src/main.c src/fixed.c conv/wall.c"
+src="src/render.c src/main.c src/fixed.c src/raycaster.c conv/wall.c"
 
 mkdir -p conv
 

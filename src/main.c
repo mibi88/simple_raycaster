@@ -34,6 +34,7 @@
 
 #include <render.h>
 #include <fixed.h>
+#include <raycaster.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,19 +64,8 @@
 
 #define COLLISIONS 1
 
-typedef struct {
-    fixed_t x, y;
-} Vector2;
-
-typedef struct {
-    fixed_t len;
-    int cx, cy;
-    unsigned char hit;
-    char c;
-    char x_axis_hit;
-} RayEnd;
-
-Renderer renderer;
+Raycaster raycaster;
+Renderer *renderer = &raycaster.renderer;
 
 char map[MAP_WIDTH*MAP_HEIGHT] = "################################"
                                  "#  #   #                       #"
@@ -110,271 +100,106 @@ char map[MAP_WIDTH*MAP_HEIGHT] = "################################"
                                  "#                              #"
                                  "################################";
 
-/* Player */
-fixed_t px = TO_FIXED(1.5);
-fixed_t py = TO_FIXED(1.5);
-fixed_t pr = TO_FIXED(45);
-/* ------ */
-
 char lock = 0;
-
-/* If the fisheye effect should be fixed. */
-char fisheye_fix = 0;
 
 char map_view = 1;
 
-char texture = 1;
-
-Texture *get_tile_tex(int cx, int cy) {
-    return &wall;
-}
-
-RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
-
-void render_map(void) {
-    int x, y;
-    fixed_t i;
-    RayEnd end;
-    for(y=0;y<MAP_HEIGHT;y++){
-        for(x=0;x<MAP_WIDTH;x++){
-            if(map[y*MAP_WIDTH+x] != ' '){
-                render_rect(&renderer, x*SCALE, y*SCALE, SCALE, SCALE, 0, 0, 0);
-            }
-        }
-    }
-    for(i=-(TO_FIXED(FOV)/2);i<TO_FIXED(FOV)/2;i+=TO_FIXED(FOV)/RAYS){
-        end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
-        /*printf("%f\n", end.len/(float)(1<<PRECISION));*/
-        if(fisheye_fix) end.len = MUL(end.len, dcos(i));
-        render_line(&renderer, TO_INT(px*SCALE), TO_INT(py*SCALE),
-                    TO_INT((px+MUL(dcos(pr+i), end.len))*SCALE),
-                    TO_INT((py+MUL(dsin(pr+i), end.len))*SCALE), 0, 255, 0);
-    }
-#if SHOWPLAYER
-    render_line(&renderer, TO_INT(px*SCALE), TO_INT(py*SCALE),
-                TO_INT((px+dcos(pr))*SCALE), TO_INT((py+dsin(pr))*SCALE), 255,
-                0, 0);
-#endif
-}
-
-void render_world(void) {
-    fixed_t i;
-    int p;
-    int c;
-    int h;
-    fixed_t l;
-    int no_clip_h;
-    RayEnd end;
-    Texture *tex;
-    for(i=-(TO_FIXED(FOV)/2),p=0;i<TO_FIXED(FOV)/2;i+=TO_FIXED(FOV)/RAYS,
-        p+=SCREEN_WIDTH/RAYS){
-        end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
-        if(!end.hit){
-            for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-                render_vline(&renderer, 0, SCREEN_HEIGHT, p+c, 0, 0, 0);
-            }
-            continue;
-        }
-        tex = get_tile_tex(end.cx, end.cy);
-        if(end.x_axis_hit){
-            l = px+MUL(dcos(pr+i), end.len);
-            l = l-FLOOR(l);
-            l *= tex->width;
-        }else{
-            l = py+MUL(dsin(pr+i), end.len);
-            l = l-FLOOR(l);
-            l *= tex->width;
-        }
-        if(fisheye_fix) end.len = MUL(end.len, dcos(i));
-        h = TO_INT(DIV(TO_FIXED(SCREEN_HEIGHT), (end.len ? end.len : 1)));
-        no_clip_h = h;
-        if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
-        for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-            render_vline(&renderer, 0, SCREEN_HEIGHT/2-h/2, p+c, 0, 0, 0);
-            render_vline(&renderer, SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT, p+c, 0,
-                         0, 0);
-            if(texture){
-            render_texvline(&renderer, tex, SCREEN_HEIGHT/2-h/2,
-                            SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT/2-no_clip_h/2,
-                            SCREEN_HEIGHT/2+no_clip_h/2, p+c, TO_INT(l),
-                            255-TO_INT(end.len/LEN*255));
-            }else{
-                render_vline(&renderer, SCREEN_HEIGHT/2-h/2,
-                             SCREEN_HEIGHT/2+h/2, p+c,
-                             (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
-                             (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
-            }
-        }
-    }
-}
-
-RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) {
-    int px = TO_INT(x1);
-    int py = TO_INT(y1);
-    fixed_t tmp;
-    RayEnd end;
-    Vector2 rays;
-    Vector2 raystep;
-    Vector2 steplen;
-    Vector2 start;
-    tmp = ABS(x2-x1);
-    if(!tmp) tmp++;
-    raystep.x = DIV((y2-y1), tmp);
-    steplen.x = fsqrt(MUL(raystep.x, raystep.x)+TO_FIXED(1));
-    tmp = ABS(y2-y1);
-    if(!tmp) tmp++;
-    raystep.y = DIV((x2-x1), tmp);
-    steplen.y = fsqrt(MUL(raystep.y, raystep.y)+TO_FIXED(1));
-    end.hit = 0;
-    /* Calculate start */
-    if(x1 < x2){
-        start.x = TO_FIXED(1)-(x1-FLOOR(x1));
-    }else{
-        start.x = x1-FLOOR(x1);
-    }
-    if(y1 < y2){
-        start.y = TO_FIXED(1)-(y1-FLOOR(y1));
-    }else{
-        start.y = y1-FLOOR(y1);
-    }
-    /* --------------- */
-    rays.y = MUL(steplen.y, start.y);
-    rays.x = MUL(steplen.x, start.x);
-    if(rays.x < rays.y){
-        end.len = rays.x;
-        end.x_axis_hit = 1;
-    }else{
-        end.len = rays.y;
-        end.x_axis_hit = 0;
-    }
-    while(end.len < TO_FIXED(LEN)){
-        /*rect(px*SCALE, py*SCALE, SCALE, SCALE, 127, 127, 255);*/
-        if(rays.x < rays.y){
-            px += x1 < x2 ? 1 : -1;
-            rays.x += steplen.x;
-            end.x_axis_hit = 0;
-        }else{
-            py += y1 < y2 ? 1 : -1;
-            rays.y += steplen.y;
-            end.x_axis_hit = 1;
-        }
-        if(px >= 0 && px < MAP_WIDTH && py >= 0 && py < MAP_HEIGHT){
-            end.cx = px;
-            end.cy = py;
-            if(map[py*MAP_WIDTH+px] != ' '){
-                end.hit = 1;
-                break;
-            }
-        }else{
-            end.cx = px;
-            end.cy = py;
-            end.hit = 0;
-            break;
-        }
-        if(rays.x < rays.y){
-            end.len = rays.x;
-        }else{
-            end.len = rays.y;
-        }
-    }
-    return end;
-}
-
 void loop(int fps) {
-    RayEnd end;
     fixed_t oldx;
     fixed_t oldy;
     int tx, ty;
     printf("FPS: %d    \r", fps);
     fflush(stdout);
-    if(render_keydown(&renderer, KEY_LEFT)) pr -= TO_FIXED(ROTSPEED)/fps;
-    if(render_keydown(&renderer, KEY_RIGHT)) pr += TO_FIXED(ROTSPEED)/fps;
-    if(render_keydown(&renderer, KEY_UP)){
-        oldx = px;
-        oldy = py;
-        px += MUL(dcos(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+    if(render_keydown(renderer, KEY_LEFT)) raycaster.r -= TO_FIXED(ROTSPEED)/fps;
+    if(render_keydown(renderer, KEY_RIGHT)) raycaster.r += TO_FIXED(ROTSPEED)/fps;
+    if(render_keydown(renderer, KEY_UP)){
+        oldx = raycaster.x;
+        oldy = raycaster.y;
+        raycaster.x += MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
 #if COLLISIONS
-        tx = TO_INT(px);
-        ty = TO_INT(py);
+        tx = TO_INT(raycaster.x);
+        ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
             if(map[ty*MAP_WIDTH+tx] != ' '){
-                px = oldx;
+                raycaster.x = oldx;
             }
         }else{
-            px = oldx;
+            raycaster.x = oldx;
         }
 #endif
-        py += MUL(dsin(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.y += MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
 #if COLLISIONS
-        tx = TO_INT(px);
-        ty = TO_INT(py);
+        tx = TO_INT(raycaster.x);
+        ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
             if(map[ty*MAP_WIDTH+tx] != ' '){
-                py = oldy;
+                raycaster.y = oldy;
             }
         }else{
-            py = oldy;
+            raycaster.y = oldy;
         }
 #endif
     }
-    if(render_keydown(&renderer, KEY_DOWN)){
-        oldx = px;
-        oldy = py;
-        px -= MUL(dcos(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+    if(render_keydown(renderer, KEY_DOWN)){
+        oldx = raycaster.x;
+        oldy = raycaster.y;
+        raycaster.x -= MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
 #if COLLISIONS
-        tx = TO_INT(px);
-        ty = TO_INT(py);
+        tx = TO_INT(raycaster.x);
+        ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
             if(map[ty*MAP_WIDTH+tx] != ' '){
-                px = oldx;
+                raycaster.x = oldx;
             }
         }else{
-            px = oldx;
+            raycaster.x = oldx;
         }
 #endif
-        py -= MUL(dsin(pr), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.y -= MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
 #if COLLISIONS
-        tx = TO_INT(px);
-        ty = TO_INT(py);
+        tx = TO_INT(raycaster.x);
+        ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
             if(map[ty*MAP_WIDTH+tx] != ' '){
-                py = oldy;
+                raycaster.y = oldy;
             }
         }else{
-            py = oldy;
+            raycaster.y = oldy;
         }
 #endif
     }
     if(!lock){
-        if(render_keydown(&renderer, KEY_LCTRL)){
+        if(render_keydown(renderer, KEY_LCTRL)){
             map_view = !map_view;
             lock = 1;
         }
-        if(render_keydown(&renderer, KEY_SPACE)){
-            fisheye_fix = !fisheye_fix;
+        if(render_keydown(renderer, KEY_SPACE)){
+            raycaster.fisheye_fix = !raycaster.fisheye_fix;
             lock = 1;
         }
-        if(render_keydown(&renderer, KEY_LALT)){
-            texture = !texture;
+        if(render_keydown(renderer, KEY_LALT)){
+            raycaster.texture = !raycaster.texture;
             lock = 1;
         }
     }else{
-        lock = render_keydown(&renderer, KEY_LCTRL) |
-               render_keydown(&renderer, KEY_SPACE) |
-               render_keydown(&renderer, KEY_LALT);
+        lock = render_keydown(renderer, KEY_LCTRL) |
+               render_keydown(renderer, KEY_SPACE) |
+               render_keydown(renderer, KEY_LALT);
     }
-    render_clear(&renderer);
+    render_clear(renderer);
     if(map_view){
-        render_map();
+        render_map(&raycaster);
     }else{
-        render_world();
+        render_world(&raycaster);
     }
-    render_update(&renderer);
+    render_update(renderer);
 }
 
 int main(int argc, char **argv) {
-    render_init(&renderer, SCREEN_WIDTH, SCREEN_HEIGHT, "DDA Test");
-    render_main_loop(&renderer, loop);
+    raycaster_init(&raycaster, SCREEN_WIDTH, SCREEN_HEIGHT, "DDA Test", map,
+                   MAP_WIDTH, MAP_HEIGHT, &wall, TO_FIXED(1.5), TO_FIXED(1.5),
+                   TO_FIXED(45));
+    render_main_loop(renderer, loop);
     return 0;
 }
 
