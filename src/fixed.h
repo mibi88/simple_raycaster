@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 
+/* Set FAST to 1 on slow 32bit CPUs */
 #define FAST 0
 
 #if FAST

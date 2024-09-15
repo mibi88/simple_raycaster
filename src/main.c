@@ -297,12 +297,12 @@ RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) {
     Vector2 steplen;
     Vector2 start;
     tmp = ABS(x2-x1);
-    if(tmp) raystep.x = DIV((y2-y1), tmp);
-    else raystep.x = (y2-y1);
+    if(!tmp) tmp++;
+    raystep.x = DIV((y2-y1), tmp);
     steplen.x = fsqrt(MUL(raystep.x, raystep.x)+TO_FIXED(1));
     tmp = ABS(y2-y1);
-    if(tmp) raystep.y = DIV((x2-x1), tmp);
-    else raystep.y = (x2-x1);
+    if(!tmp) tmp++;
+    raystep.y = DIV((x2-x1), tmp);
     steplen.y = fsqrt(MUL(raystep.y, raystep.y)+TO_FIXED(1));
     end.hit = 0;
     /* Calculate start */

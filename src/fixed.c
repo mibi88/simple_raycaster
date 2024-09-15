@@ -55,7 +55,7 @@ fixed_t dcos(fixed_t d) {
 }
 
 fixed_t dtan(fixed_t d) {
-    return dsin(d)/dcos(d);
+    return DIV(dsin(d), dcos(d));
 }
 
 #define HALF (1<<PRECISION>>1)
