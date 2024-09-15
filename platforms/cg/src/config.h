@@ -32,8 +32,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef FAST
 
 /* Set FAST to 1 on slow 32bit CPUs */
 #define FAST 1
