@@ -129,6 +129,11 @@ Texture *get_tile_tex(int cx, int cy) {
 
 void vline(int y1, int y2, int x, int r, int g, int b) {
     int y;
+    if(x < 0 || x >= SCREEN_WIDTH) return;
+    if(y1 < 0) y1 = 0;
+    else if(y1 >= SCREEN_HEIGHT) y1 = SCREEN_HEIGHT-1;
+    if(y2 >= SCREEN_HEIGHT) y2 = SCREEN_HEIGHT-1;
+    else if(y2 < 0) y2 = 0;
     for(y=y1;y<y2;y+=y1<y2 ? 1 : -1){
         render_set_pixel(&renderer, x, y, r, g, b, 255);
     }
@@ -144,12 +149,17 @@ void texline(Texture *tex, int y1, int y2, int ty1, int ty2, int x, int l,
     int p;
     int n;
     int t;
-    fixed_t h = ABS(TO_FIXED(ty2)-TO_FIXED(ty1));
-    fixed_t texinc = DIV(TO_FIXED(tex->height), (h ? h : 1));
+    unsigned int h = ABS(ty2-ty1);
+    ufixed_t texinc = UTO_FIXED(tex->height)/(h ? h : 1);
+    if(x < 0 || x >= SCREEN_WIDTH) return;
+    if(y1 < 0) y1 = 0;
+    else if(y1 >= SCREEN_HEIGHT) y1 = SCREEN_HEIGHT-1;
+    if(y2 >= SCREEN_HEIGHT) y2 = SCREEN_HEIGHT-1;
+    else if(y2 < 0) y2 = 0;
     if(l >= tex->width) l = tex->width-1;
     else if(l < 0) l = 0;
     for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
-        p = TO_INT(texinc*t);
+        p = UTO_INT(texinc*t);
         if(p < 0) p = 0;
         else if(p >= tex->height) p = tex->height-1;
         r = tex->data[p*tex->width+l]>>24;

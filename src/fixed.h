@@ -37,14 +37,31 @@
 
 #include <stdint.h>
 
+#define FAST 0
+
+#if FAST
+/* The fixed point type (to make the code easier to read). */
+typedef int32_t fixed_t;
+typedef uint32_t ufixed_t;
+
+/* The precision of the fixed point numbers. */
+#define PRECISION 7
+#define UPRECISION 16
+
+/* The number of iterations when calculating the square root */
+#define SQRT_PRECISION 5
+#else
 /* The fixed point type (to make the code easier to read). */
 typedef int64_t fixed_t;
+typedef uint64_t ufixed_t;
 
 /* The precision of the fixed point numbers. */
 #define PRECISION 15
+#define UPRECISION 32
 
 /* The number of iterations when calculating the square root */
 #define SQRT_PRECISION 10
+#endif
 
 /* Convert a float to a fixed point number. */
 #define TO_FIXED(num) (fixed_t)((num)*(fixed_t)(1<<PRECISION))
@@ -58,6 +75,18 @@ typedef int64_t fixed_t;
 
 /* Fixed point floor function. */
 #define FLOOR(num) (num&~((1<<PRECISION)-1))
+
+/* Unsigned math */
+/* Convert a float to a fixed point number. */
+#define UTO_FIXED(num) (ufixed_t)((num)*(ufixed_t)((ufixed_t)1<<UPRECISION))
+/* Convert a fixed point number to an integer. */
+#define UTO_INT(num) ((num)>>UPRECISION)
+/* Multiply two fixed point numbers together. */
+#define UMUL(a, b) (((a)*(b))>>UPRECISION)
+
+/* Divide the fixed point number a by the fixed point number b. */
+#define UDIV(a, b) (((a)<<UPRECISION)/(b))
+/*****************/
 
 /* See
  * https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula.
