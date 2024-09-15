@@ -181,7 +181,8 @@ char render_keydown(Renderer *renderer, int key) {
         SDL_SCANCODE_LEFT,
         SDL_SCANCODE_RIGHT,
         SDL_SCANCODE_SPACE,
-        SDL_SCANCODE_LCTRL
+        SDL_SCANCODE_LCTRL,
+        SDL_SCANCODE_LALT
     };
     SDL_PumpEvents();
     keybuffer = (Uint8*)SDL_GetKeyboardState(NULL);

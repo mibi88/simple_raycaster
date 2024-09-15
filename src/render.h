@@ -47,6 +47,7 @@ enum {
     KEY_RIGHT,
     KEY_SPACE,
     KEY_LCTRL,
+    KEY_LALT,
     KEY_AMOUNT
 };
 

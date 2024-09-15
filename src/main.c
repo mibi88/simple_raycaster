@@ -123,6 +123,8 @@ char fisheye_fix = 0;
 
 char map_view = 1;
 
+char texture = 1;
+
 Texture *get_tile_tex(int cx, int cy) {
     return &wall;
 }
@@ -191,16 +193,17 @@ void render_world(void) {
             render_vline(&renderer, 0, SCREEN_HEIGHT/2-h/2, p+c, 0, 0, 0);
             render_vline(&renderer, SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT, p+c, 0,
                          0, 0);
-#if TEXTURE
+            if(texture){
             render_texvline(&renderer, tex, SCREEN_HEIGHT/2-h/2,
                             SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT/2-no_clip_h/2,
                             SCREEN_HEIGHT/2+no_clip_h/2, p+c, TO_INT(l),
                             255-TO_INT(end.len/LEN*255));
-#else
-            render_vline(&renderer, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2,
-                         p+c, (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
-                         (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
-#endif
+            }else{
+                render_vline(&renderer, SCREEN_HEIGHT/2-h/2,
+                             SCREEN_HEIGHT/2+h/2, p+c,
+                             (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
+                             (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
+            }
         }
     }
 }
@@ -351,9 +354,14 @@ void loop(int fps) {
             fisheye_fix = !fisheye_fix;
             lock = 1;
         }
+        if(render_keydown(&renderer, KEY_LALT)){
+            texture = !texture;
+            lock = 1;
+        }
     }else{
         lock = render_keydown(&renderer, KEY_LCTRL) |
-               render_keydown(&renderer, KEY_SPACE);
+               render_keydown(&renderer, KEY_SPACE) |
+               render_keydown(&renderer, KEY_LALT);
     }
     render_clear(&renderer);
     if(map_view){
