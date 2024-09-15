@@ -39,8 +39,7 @@
 
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 
-/* Set FAST to 1 on slow 32bit CPUs */
-#define FAST 0
+#include <config.h>
 
 #if FAST
 /* The fixed point type (to make the code easier to read). */

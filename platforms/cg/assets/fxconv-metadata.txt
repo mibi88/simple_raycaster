@@ -1,0 +1,3 @@
+wall.png:
+  type: bopti-image
+  name: wall

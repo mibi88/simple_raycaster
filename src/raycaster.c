@@ -48,8 +48,8 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
     r->len = 25;
     r->speed = 5;
     r->rotspeed = 100;
-    r->width = width;
-    r->height = height;
+    r->width = render_get_width(&RENDERER);
+    r->height = render_get_height(&RENDERER);
     /* Features */
     r->texture = 1;
     r->fisheye_fix = 1;
