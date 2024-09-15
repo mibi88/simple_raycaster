@@ -97,14 +97,41 @@ void render_vline(Renderer *renderer, int y1, int y2, int x, int r, int g,
     else if(y1 >= renderer->h) y1 = renderer->h-1;
     if(y2 >= renderer->h) y2 = renderer->h-1;
     else if(y2 < 0) y2 = 0;
-    for(y=y1;y<y2;y+=y1<y2 ? 1 : -1){
-        SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
-        SDL_RenderDrawPoint(renderer->renderer, x, y);
-    }
+    SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
+    SDL_RenderDrawLine(renderer->renderer, x, y1, x, y2);
 }
 
 void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
                      int ty2, int x, int l, int fog) {
+#if FAST_TEXTURING
+    SDL_Rect texrect;
+    SDL_Rect destrect;
+    if(!tex->extradata){
+        /* Create an SDL texture. */
+        tex->extradata = SDL_CreateTexture(renderer->renderer,
+                                           SDL_PIXELFORMAT_RGBA8888,
+                                           SDL_TEXTUREACCESS_STREAMING,
+                                           tex->width, tex->height);
+        if(!tex->extradata){
+            return;
+        }
+        if(SDL_UpdateTexture(tex->extradata, NULL, tex->data, tex->width*4)){
+            return;
+        }
+    }
+    if(l < 0 || l >= tex->width) return;
+    texrect.x = l;
+    texrect.y = 0;
+    texrect.w = 1;
+    texrect.h = tex->height;
+    destrect.x = x;
+    destrect.y = ty1 < y2 ? ty1 : ty2;
+    destrect.w = 1;
+    destrect.h = ABS(ty2-ty1);
+    SDL_SetTextureColorMod(tex->extradata, fog, fog, fog);
+    SDL_RenderCopyEx(renderer->renderer, tex->extradata, &texrect, &destrect,
+                     0, NULL, SDL_FLIP_NONE);
+#else
     int y;
     int r, g, b;
     int p;
@@ -132,6 +159,7 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
         SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer->renderer, x, y);
     }
+#endif
 }
 
 void render_update(Renderer *renderer) {

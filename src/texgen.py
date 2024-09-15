@@ -57,6 +57,7 @@ for y in range(h):
         pxlist.append(pixel[0]<<24|pixel[1]<<16|pixel[2]<<8|pixel[3])
 
 out = f"""#include <texture.h>
+#include <stddef.h>
 
 const unsigned int {name.lower()}_data[{w*h}] = {{
 """
@@ -84,7 +85,7 @@ for n in range(len(pxlist)):
 out += f"""
 }};
 
-Texture {name.lower()} = {{{name.lower()}_data, {w}, {h}}};\n
+Texture {name.lower()} = {{{name.lower()}_data, {w}, {h}, NULL}};\n
 """
 
 with open(source, "w") as fp:

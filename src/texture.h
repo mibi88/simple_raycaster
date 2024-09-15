@@ -5,6 +5,7 @@ typedef struct {
     const unsigned int *data;
     int width;
     int height;
+    void *extradata;
 } Texture;
 
 #endif

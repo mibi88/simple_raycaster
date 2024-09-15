@@ -35,6 +35,8 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#define FAST_TEXTURING 1
+
 #include <texture.h>
 
 /* Some key codes. */
