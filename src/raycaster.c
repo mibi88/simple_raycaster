@@ -68,7 +68,7 @@ Texture *_get_tile_tex(Raycaster *r, int cx, int cy) {
     return r->tex;
 }
 
-void render_map(Raycaster *r) {
+void raycaster_render_map(Raycaster *r) {
     int x, y;
     fixed_t i;
     RayEnd end;
@@ -82,8 +82,8 @@ void render_map(Raycaster *r) {
     }
     for(i=-(TO_FIXED(r->fov)/2);i<TO_FIXED(r->fov)/2;
         i+=TO_FIXED(r->fov)/r->rays){
-        end = raycast(r, r->x, r->y, r->x+dcos(r->r+i)*r->len,
-                      r->y+dsin(r->r+i)*r->len);
+        end = raycaster_raycast(r, r->x, r->y, r->x+dcos(r->r+i)*r->len,
+                                r->y+dsin(r->r+i)*r->len);
         if(r->fisheye_fix) end.len = MUL(end.len, dcos(i));
         render_line(&RENDERER, TO_INT(r->x*r->scale), TO_INT(r->y*r->scale),
                     TO_INT((r->x+MUL(dcos(r->r+i), end.len))*r->scale),
@@ -95,7 +95,7 @@ void render_map(Raycaster *r) {
                 TO_INT((r->y+dsin(r->r))*r->scale), 255, 0, 0);
 }
 
-void render_world(Raycaster *r) {
+void raycaster_render_world(Raycaster *r) {
     fixed_t i;
     int p;
     int c;
@@ -106,8 +106,8 @@ void render_world(Raycaster *r) {
     Texture *tex;
     for(i=-(TO_FIXED(r->fov)/2),p=0;i<TO_FIXED(r->fov)/2;
         i+=TO_FIXED(r->fov)/r->rays, p+=r->width/r->rays){
-        end = raycast(r, r->x, r->y, r->x+dcos(r->r+i)*r->len,
-                      r->y+dsin(r->r+i)*r->len);
+        end = raycaster_raycast(r, r->x, r->y, r->x+dcos(r->r+i)*r->len,
+                                r->y+dsin(r->r+i)*r->len);
         if(!end.hit){
             for(c=0;c<r->width/r->rays;c++){
                 render_vline(&RENDERER, 0, r->height, p+c, 0, 0, 0);
@@ -148,7 +148,8 @@ void render_world(Raycaster *r) {
     }
 }
 
-RayEnd raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2) {
+RayEnd raycaster_raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2,
+                         fixed_t y2) {
     int px = TO_INT(x1);
     int py = TO_INT(y1);
     fixed_t tmp;

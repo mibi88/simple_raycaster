@@ -80,13 +80,14 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
                     char *map, int map_width, int map_height, Texture *tex,
                     fixed_t x, fixed_t y, fixed_t a);
 
-void render_map(Raycaster *r);
+void raycaster_render_map(Raycaster *r);
 
-void render_world(Raycaster *r);
+void raycaster_render_world(Raycaster *r);
 
-RayEnd raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
+RayEnd raycaster_raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2,
+                         fixed_t y2);
 
-void render_map(Raycaster *r);
+void raycaster_render_map(Raycaster *r);
 
 
 

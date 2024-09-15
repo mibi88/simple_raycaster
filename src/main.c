@@ -110,12 +110,17 @@ void loop(int fps) {
     int tx, ty;
     printf("FPS: %d    \r", fps);
     fflush(stdout);
-    if(render_keydown(renderer, KEY_LEFT)) raycaster.r -= TO_FIXED(ROTSPEED)/fps;
-    if(render_keydown(renderer, KEY_RIGHT)) raycaster.r += TO_FIXED(ROTSPEED)/fps;
+    if(render_keydown(renderer, KEY_LEFT)){
+        raycaster.r -= TO_FIXED(ROTSPEED)/fps;
+    }
+    if(render_keydown(renderer, KEY_RIGHT)){
+        raycaster.r += TO_FIXED(ROTSPEED)/fps;
+    }
     if(render_keydown(renderer, KEY_UP)){
         oldx = raycaster.x;
         oldy = raycaster.y;
-        raycaster.x += MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.x += MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED),
+                           TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
@@ -127,7 +132,8 @@ void loop(int fps) {
             raycaster.x = oldx;
         }
 #endif
-        raycaster.y += MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.y += MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED),
+                           TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
@@ -143,7 +149,8 @@ void loop(int fps) {
     if(render_keydown(renderer, KEY_DOWN)){
         oldx = raycaster.x;
         oldy = raycaster.y;
-        raycaster.x -= MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.x -= MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED),
+                           TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
@@ -155,7 +162,8 @@ void loop(int fps) {
             raycaster.x = oldx;
         }
 #endif
-        raycaster.y -= MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED), TO_FIXED(fps)));
+        raycaster.y -= MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED),
+                           TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
@@ -188,9 +196,9 @@ void loop(int fps) {
     }
     render_clear(renderer);
     if(map_view){
-        render_map(&raycaster);
+        raycaster_render_map(&raycaster);
     }else{
-        render_world(&raycaster);
+        raycaster_render_world(&raycaster);
     }
     render_update(renderer);
 }
