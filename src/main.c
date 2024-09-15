@@ -127,91 +127,6 @@ Texture *get_tile_tex(int cx, int cy) {
     return &wall;
 }
 
-void vline(int y1, int y2, int x, int r, int g, int b) {
-    int y;
-    if(x < 0 || x >= SCREEN_WIDTH) return;
-    if(y1 < 0) y1 = 0;
-    else if(y1 >= SCREEN_HEIGHT) y1 = SCREEN_HEIGHT-1;
-    if(y2 >= SCREEN_HEIGHT) y2 = SCREEN_HEIGHT-1;
-    else if(y2 < 0) y2 = 0;
-    for(y=y1;y<y2;y+=y1<y2 ? 1 : -1){
-        render_set_pixel(&renderer, x, y, r, g, b, 255);
-    }
-}
-
-#define ABS(x) ((x) < 0 ? -(x) : (x))
-
-#if TEXTURE
-void texline(Texture *tex, int y1, int y2, int ty1, int ty2, int x, int l,
-             int fog) {
-    int y;
-    int r, g, b;
-    int p;
-    int n;
-    int t;
-    unsigned int h = ABS(ty2-ty1);
-    ufixed_t texinc = UTO_FIXED(tex->height)/(h ? h : 1);
-    if(x < 0 || x >= SCREEN_WIDTH) return;
-    if(y1 < 0) y1 = 0;
-    else if(y1 >= SCREEN_HEIGHT) y1 = SCREEN_HEIGHT-1;
-    if(y2 >= SCREEN_HEIGHT) y2 = SCREEN_HEIGHT-1;
-    else if(y2 < 0) y2 = 0;
-    if(l >= tex->width) l = tex->width-1;
-    else if(l < 0) l = 0;
-    for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
-        p = UTO_INT(texinc*t);
-        if(p < 0) p = 0;
-        else if(p >= tex->height) p = tex->height-1;
-        r = tex->data[p*tex->width+l]>>24;
-        g = (tex->data[p*tex->width+l]>>16)&0xFF;
-        b = (tex->data[p*tex->width+l]>>8)&0xFF;
-        r = TO_INT(TO_FIXED(r)/255*fog);
-        g = TO_INT(TO_FIXED(g)/255*fog);
-        b = TO_INT(TO_FIXED(b)/255*fog);
-        render_set_pixel(&renderer, x, y, r, g, b, 255);
-    }
-}
-#endif
-
-void line(int x1, int y1, int x2, int y2, int r, int g, int b) {
-    int dx = ABS(x2-x1);
-    int sx = ((x1 < x2)<<1)-1;
-    int dy = -ABS(y2-y1);
-    int sy = ((y1 < y2)<<1)-1;
-    int error = dx + dy;
-    int e2;
-    for(;;){
-        render_set_pixel(&renderer, x1, y1, r, g, b, 255);
-        if(x1 == x2 && y1 == y2){
-            break;
-        }
-        e2 = 2*error;
-        if(e2 >= dy){
-            if(x1 == x2){
-                break;
-            }
-            error = error+dy;
-            x1 = x1 + sx;
-        }
-        if(e2 <= dx){
-            if(y1 == y2){
-                break;
-            }
-            error = error+dx;
-            y1 = y1+sy;
-        }
-    }
-}
-
-void rect(int sx, int sy, int w, int h, int r, int g, int b){
-    int x, y;
-    for(y=0;y<h;y++){
-        for(x=0;x<w;x++){
-            render_set_pixel(&renderer, sx+x, sy+y, r, g, b, 255);
-        }
-    }
-}
-
 RayEnd raycast(fixed_t x1, fixed_t y1, fixed_t x2, fixed_t y2);
 
 void render_map(void) {
@@ -221,7 +136,7 @@ void render_map(void) {
     for(y=0;y<MAP_HEIGHT;y++){
         for(x=0;x<MAP_WIDTH;x++){
             if(map[y*MAP_WIDTH+x] != ' '){
-                rect(x*SCALE, y*SCALE, SCALE, SCALE, 0, 0, 0);
+                render_rect(&renderer, x*SCALE, y*SCALE, SCALE, SCALE, 0, 0, 0);
             }
         }
     }
@@ -229,13 +144,14 @@ void render_map(void) {
         end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
         /*printf("%f\n", end.len/(float)(1<<PRECISION));*/
         if(fisheye_fix) end.len = MUL(end.len, dcos(i));
-        line(TO_INT(px*SCALE), TO_INT(py*SCALE),
-             TO_INT((px+MUL(dcos(pr+i), end.len))*SCALE),
-             TO_INT((py+MUL(dsin(pr+i), end.len))*SCALE), 0, 255, 0);
+        render_line(&renderer, TO_INT(px*SCALE), TO_INT(py*SCALE),
+                    TO_INT((px+MUL(dcos(pr+i), end.len))*SCALE),
+                    TO_INT((py+MUL(dsin(pr+i), end.len))*SCALE), 0, 255, 0);
     }
 #if SHOWPLAYER
-    line(TO_INT(px*SCALE), TO_INT(py*SCALE), TO_INT((px+dcos(pr))*SCALE),
-         TO_INT((py+dsin(pr))*SCALE), 255, 0, 0);
+    render_line(&renderer, TO_INT(px*SCALE), TO_INT(py*SCALE),
+                TO_INT((px+dcos(pr))*SCALE), TO_INT((py+dsin(pr))*SCALE), 255,
+                0, 0);
 #endif
 }
 
@@ -253,7 +169,7 @@ void render_world(void) {
         end = raycast(px, py, px+dcos(pr+i)*LEN, py+dsin(pr+i)*LEN);
         if(!end.hit){
             for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-                vline(0, SCREEN_HEIGHT, p+c, 0, 0, 0);
+                render_vline(&renderer, 0, SCREEN_HEIGHT, p+c, 0, 0, 0);
             }
             continue;
         }
@@ -272,16 +188,18 @@ void render_world(void) {
         no_clip_h = h;
         if(h > SCREEN_HEIGHT) h = SCREEN_HEIGHT;
         for(c=0;c<SCREEN_WIDTH/RAYS;c++){
-            vline(0, SCREEN_HEIGHT/2-h/2, p+c, 0, 0, 0);
-            vline(SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT, p+c, 0, 0, 0);
+            render_vline(&renderer, 0, SCREEN_HEIGHT/2-h/2, p+c, 0, 0, 0);
+            render_vline(&renderer, SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT, p+c, 0,
+                         0, 0);
 #if TEXTURE
-            texline(tex, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, 
-                    SCREEN_HEIGHT/2-no_clip_h/2, SCREEN_HEIGHT/2+no_clip_h/2,
-                    p+c, TO_INT(l), 255-TO_INT(end.len/LEN*255));
+            render_texvline(&renderer, tex, SCREEN_HEIGHT/2-h/2,
+                            SCREEN_HEIGHT/2+h/2, SCREEN_HEIGHT/2-no_clip_h/2,
+                            SCREEN_HEIGHT/2+no_clip_h/2, p+c, TO_INT(l),
+                            255-TO_INT(end.len/LEN*255));
 #else
-            vline(SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2, p+c,
-                  (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
-                  (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
+            render_vline(&renderer, SCREEN_HEIGHT/2-h/2, SCREEN_HEIGHT/2+h/2,
+                         p+c, (255-TO_INT(end.len/LEN*255))*(!end.x_axis_hit),
+                         (255-TO_INT(end.len/LEN*255))*end.x_axis_hit, 0);
 #endif
         }
     }

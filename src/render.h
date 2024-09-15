@@ -35,6 +35,8 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#include <texture.h>
+
 /* Some key codes. */
 enum {
     KEY_UP,
@@ -55,8 +57,19 @@ typedef struct {
 
 void render_init(Renderer *renderer, int width, int height, char *title);
 
-void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b,
-                      int a);
+void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b);
+
+void render_line(Renderer *renderer, int x1, int y1, int x2, int y2, int r,
+                 int g, int b);
+
+void render_rect(Renderer *renderer, int sx, int sy, int w, int h, int r,
+                 int g, int b);
+
+void render_vline(Renderer *renderer, int y1, int y2, int x, int r, int g,
+                  int b);
+
+void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
+                     int ty2, int x, int l, int fog);
 
 void render_update(Renderer *renderer);
 

@@ -35,6 +35,8 @@
 #include <render.h>
 #include <SDL2/SDL.h>
 
+#include <fixed.h>
+
 void render_init(Renderer *renderer, int width, int height, char *title) {
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         fputs("[render] Failed to initialize the SDL2!", stderr);
@@ -63,10 +65,71 @@ void render_init(Renderer *renderer, int width, int height, char *title) {
     render_clear(renderer);
 }
 
-void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b,
-                      int a) {
+void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b) {
     if(x >= 0 && x < renderer->w && y >= 0 && y < renderer->h){
-        SDL_SetRenderDrawColor(renderer->renderer, r, g, b, a);
+        SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
+        SDL_RenderDrawPoint(renderer->renderer, x, y);
+    }
+}
+
+void render_line(Renderer *renderer, int x1, int y1, int x2, int y2, int r,
+                 int g, int b) {
+    SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
+    SDL_RenderDrawLine(renderer->renderer, x1, y1, x2, y2);
+}
+
+void render_rect(Renderer *renderer, int sx, int sy, int w, int h, int r,
+                 int g, int b) {
+    SDL_Rect rect;
+    rect.x = sx;
+    rect.y = sy;
+    rect.w = w;
+    rect.h = h;
+    SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
+    SDL_RenderFillRect(renderer->renderer, &rect);
+}
+
+void render_vline(Renderer *renderer, int y1, int y2, int x, int r, int g,
+                  int b) {
+    int y;
+    if(x < 0 || x >= renderer->w) return;
+    if(y1 < 0) y1 = 0;
+    else if(y1 >= renderer->h) y1 = renderer->h-1;
+    if(y2 >= renderer->h) y2 = renderer->h-1;
+    else if(y2 < 0) y2 = 0;
+    for(y=y1;y<y2;y+=y1<y2 ? 1 : -1){
+        SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
+        SDL_RenderDrawPoint(renderer->renderer, x, y);
+    }
+}
+
+void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
+                     int ty2, int x, int l, int fog) {
+    int y;
+    int r, g, b;
+    int p;
+    int n;
+    int t;
+    unsigned int h = ABS(ty2-ty1);
+    ufixed_t texinc = UTO_FIXED(tex->height)/(h ? h : 1);
+    if(x < 0 || x >= renderer->w) return;
+    if(y1 < 0) y1 = 0;
+    else if(y1 >= renderer->h) y1 = renderer->h-1;
+    if(y2 >= renderer->h) y2 = renderer->h-1;
+    else if(y2 < 0) y2 = 0;
+    if(l >= tex->width) l = tex->width-1;
+    else if(l < 0) l = 0;
+    for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
+        p = UTO_INT(texinc*t);
+        if(p < 0) p = 0;
+        else if(p >= tex->height) p = tex->height-1;
+        r = tex->data[p*tex->width+l]>>24;
+        g = (tex->data[p*tex->width+l]>>16)&0xFF;
+        b = (tex->data[p*tex->width+l]>>8)&0xFF;
+        r = TO_INT(TO_FIXED(r)/255*fog);
+        g = TO_INT(TO_FIXED(g)/255*fog);
+        b = TO_INT(TO_FIXED(b)/255*fog);
+        SDL_SetRenderDrawColor(renderer->renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer->renderer, x, y);
     }
 }
@@ -142,7 +205,7 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
         /* Handle time and call loop_function */
         _last_t = SDL_GetTicks();
         loop_function(renderer->fps ? renderer->fps : 1);
-        /*while(SDL_GetTicks() - _last_t < 20);*/
+        while(SDL_GetTicks() - _last_t < 20);
         time = SDL_GetTicks() - _last_t;
         time = time ? time : 1;
         renderer->fps = 1000/time;

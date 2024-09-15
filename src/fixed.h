@@ -37,6 +37,8 @@
 
 #include <stdint.h>
 
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+
 /* Set FAST to 1 on slow 32bit CPUs */
 #define FAST 0
 
