@@ -40,16 +40,16 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
                     char *map, int map_width, int map_height, Texture *tex,
                     fixed_t x, fixed_t y, fixed_t a) {
     render_init(&RENDERER, width, height, title);
+    r->width = render_get_width(&RENDERER);
+    r->height = render_get_height(&RENDERER);
     /* Settings */
     r->fov = 60;
-    r->rays = width;
-    r->scale = width/map_width;
-    if(height/map_height < r->scale) r->scale = height/map_height;
+    r->rays = r->width;
+    r->scale = r->width/map_width;
+    if(r->height/map_height < r->scale) r->scale = r->height/map_height;
     r->len = 25;
     r->speed = 5;
     r->rotspeed = 100;
-    r->width = render_get_width(&RENDERER);
-    r->height = render_get_height(&RENDERER);
     /* Features */
     r->texture = 1;
     r->fisheye_fix = 1;

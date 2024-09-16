@@ -197,6 +197,8 @@ void loop(int fps) {
     render_clear(renderer);
     if(map_view){
         raycaster_render_map(&raycaster);
+        /*dprint(32, 32, C_LIGHT, "%f, %f", raycaster.x/(float)(1<<PRECISION),
+                 raycaster.y/(float)(1<<PRECISION));*/
     }else{
         raycaster_render_world(&raycaster);
     }

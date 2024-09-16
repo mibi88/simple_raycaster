@@ -37,8 +37,6 @@
 #include <gint/display.h>
 #include <gint/timer.h>
 
-#include <fixed.h>
-
 void render_init(Renderer *renderer, int width, int height, char *title) {
     dclear(C_WHITE);
 }
@@ -156,7 +154,7 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
     clearevents();
     while(!keydown(KEY_EXIT)){
         clearevents();
-        if(!lock){
+        /*if(!lock){
             if(keydown(KEY_VARS)){
                 fps_text = !fps_text;
             }
@@ -165,8 +163,8 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
         }
         if(fps_text){
             dprint(8, 8, C_LIGHT, "FPS: %d", fps);
-        }
-        loop(fps ? fps : 1);
+        }*/
+        loop_function(fps ? fps : 1);
         fps = 1000/(_ms_time ? _ms_time : 1);
         _ms_time = 0;
         clearevents();

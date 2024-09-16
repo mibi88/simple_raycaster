@@ -32,9 +32,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef FAST
+#ifndef CONFIG_H
+#define CONFIG_H
 
 /* Set FAST to 1 on slow 32bit CPUs */
-#define FAST 1
+/* TODO: Get fast working on cg */
+#define FAST 0
 
 #endif

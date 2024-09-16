@@ -38,6 +38,7 @@
 #define CG 1
 
 #include <texture.h>
+#include <fixed.h>
 
 #include <gint/keyboard.h>
 
