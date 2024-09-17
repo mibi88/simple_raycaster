@@ -104,12 +104,12 @@ char lock = 0;
 
 char map_view = 1;
 
+char show_fps = 1;
+
 void loop(int fps) {
     fixed_t oldx;
     fixed_t oldy;
     int tx, ty;
-    printf("FPS: %d    \r", fps);
-    fflush(stdout);
     if(render_keydown(renderer, KEY_LEFT)){
         raycaster.r -= TO_FIXED(ROTSPEED)/fps;
     }
@@ -189,19 +189,23 @@ void loop(int fps) {
             raycaster.texture = !raycaster.texture;
             lock = 1;
         }
+        if(render_keydown(renderer, KEY_LSHIFT)){
+            show_fps = !show_fps;
+            lock = 1;
+        }
     }else{
         lock = render_keydown(renderer, KEY_LCTRL) |
                render_keydown(renderer, KEY_SPACE) |
-               render_keydown(renderer, KEY_LALT);
+               render_keydown(renderer, KEY_LALT) |
+               render_keydown(renderer, KEY_LSHIFT);
     }
     render_clear(renderer);
     if(map_view){
         raycaster_render_map(&raycaster);
-        /*dprint(32, 32, C_LIGHT, "%f, %f", raycaster.x/(float)(1<<PRECISION),
-                 raycaster.y/(float)(1<<PRECISION));*/
     }else{
         raycaster_render_world(&raycaster);
     }
+    if(show_fps) render_show_fps(renderer);
     render_update(renderer);
 }
 

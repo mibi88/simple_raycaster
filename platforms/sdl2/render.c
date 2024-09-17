@@ -182,7 +182,8 @@ char render_keydown(Renderer *renderer, int key) {
         SDL_SCANCODE_RIGHT,
         SDL_SCANCODE_SPACE,
         SDL_SCANCODE_LCTRL,
-        SDL_SCANCODE_LALT
+        SDL_SCANCODE_LALT,
+        SDL_SCANCODE_LSHIFT
     };
     SDL_PumpEvents();
     keybuffer = (Uint8*)SDL_GetKeyboardState(NULL);
@@ -202,6 +203,12 @@ int render_get_height(Renderer *renderer) {
 
 int render_ms(Renderer *renderer) {
     return SDL_GetTicks();
+}
+
+void render_show_fps(Renderer *renderer) {
+    /* TODO: Show the FPS in the window */
+    printf("FPS: %d    \r", renderer->fps);
+    fflush(stdout);
 }
 
 void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {

@@ -47,6 +47,7 @@ enum {
     KEY_SPACE = KEY_ALPHA,
     KEY_LCTRL = KEY_SHIFT,
     KEY_LALT = KEY_OPTN,
+    KEY_LSHIFT = KEY_VARS,
     KEY_AMOUNT
 };
 
@@ -79,6 +80,8 @@ int render_get_width(Renderer *renderer);
 int render_get_height(Renderer *renderer);
 
 int render_ms(Renderer *renderer);
+
+void render_show_fps(Renderer *renderer);
 
 void render_main_loop(Renderer *renderer, void (*loop_function)(int));
 

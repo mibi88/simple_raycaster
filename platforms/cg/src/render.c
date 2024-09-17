@@ -138,7 +138,13 @@ int render_ms(Renderer *renderer) {
     return 0; /* TODO */
 }
 
-int _ms_time = 0;
+int _fps;
+
+void render_show_fps(Renderer *renderer) {
+    dprint(8, 8, C_LIGHT, "FPS: %d", _fps);
+}
+
+int _ms_time;
 
 int timer_call(void) {
     _ms_time++;
@@ -146,26 +152,14 @@ int timer_call(void) {
 }
 
 void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
-    int fps = 30;
     int timer = timer_configure(TIMER_TMU, 1000, GINT_CALL(timer_call));
-    int lock = 0;
-    int fps_text = 1;
     timer_start(timer);
     clearevents();
+    _fps = 30;
+    _ms_time = 0;
     while(!keydown(KEY_EXIT)){
-        clearevents();
-        /*if(!lock){
-            if(keydown(KEY_VARS)){
-                fps_text = !fps_text;
-            }
-        }else{
-            lock = keydown(KEY_VARS);
-        }
-        if(fps_text){
-            dprint(8, 8, C_LIGHT, "FPS: %d", fps);
-        }*/
-        loop_function(fps ? fps : 1);
-        fps = 1000/(_ms_time ? _ms_time : 1);
+        loop_function(_fps ? _fps : 1);
+        _fps = 1000/(_ms_time ? _ms_time : 1);
         _ms_time = 0;
         clearevents();
     }
