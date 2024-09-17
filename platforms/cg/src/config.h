@@ -35,8 +35,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-/* Set FAST to 1 on slow 32bit CPUs */
-/* TODO: Get fast working on cg */
-#define FAST 0
+/* Set FAST to 1 on slow 32bit CPUs
+ * FAST only works with up to date sh-elf-gcc (or at least it doesn't compile
+ * correctly with my old gint 2.8 install), i.e. if you have e.g. gint 2.8, set
+ * FAST to 0.
+ */
+#define FAST 1
 
 #endif
