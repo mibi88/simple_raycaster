@@ -38,4 +38,9 @@
 /* Set FAST to 1 on slow 32bit CPUs */
 #define FAST 0
 
+/* Set NOCLEAR to 1 to clear the screen only when rendering the map view. May
+ * be faster in some cases.
+ */
+#define NOCLEAR 0
+
 #endif

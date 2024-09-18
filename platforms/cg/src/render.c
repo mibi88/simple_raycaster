@@ -117,8 +117,8 @@ void render_update(Renderer *renderer) {
     dupdate();
 }
 
-void render_clear(Renderer *renderer) {
-    dclear(C_WHITE);
+void render_clear(Renderer *renderer, char black) {
+    dclear(black ? C_BLACK : C_WHITE);
 }
 
 char render_keydown(Renderer *renderer, int key) {
@@ -165,4 +165,3 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
     }
     timer_stop(timer);
 }
-

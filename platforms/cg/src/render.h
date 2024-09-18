@@ -71,7 +71,7 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
 
 void render_update(Renderer *renderer);
 
-void render_clear(Renderer *renderer);
+void render_clear(Renderer *renderer, char black);
 
 char render_keydown(Renderer *renderer, int key);
 
@@ -86,4 +86,3 @@ void render_show_fps(Renderer *renderer);
 void render_main_loop(Renderer *renderer, void (*loop_function)(int));
 
 #endif
-

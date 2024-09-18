@@ -42,4 +42,9 @@
  */
 #define FAST 1
 
+/* Set NOCLEAR to 1 to clear the screen only when rendering the map view. May
+ * be faster in some cases.
+ */
+#define NOCLEAR 0
+
 #endif

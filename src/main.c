@@ -199,7 +199,6 @@ void loop(int fps) {
                render_keydown(renderer, KEY_LALT) |
                render_keydown(renderer, KEY_LSHIFT);
     }
-    render_clear(renderer);
     if(map_view){
         raycaster_render_map(&raycaster);
     }else{
@@ -216,4 +215,3 @@ int main(int argc, char **argv) {
     render_main_loop(renderer, loop);
     return 0;
 }
-

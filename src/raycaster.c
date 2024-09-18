@@ -72,6 +72,7 @@ void raycaster_render_map(Raycaster *r) {
     int x, y;
     fixed_t i;
     RayEnd end;
+    render_clear(&RENDERER, 0);
     for(y=0;y<r->map_height;y++){
         for(x=0;x<r->map_width;x++){
             if(r->map[y*r->map_width+x] != ' '){
@@ -104,6 +105,9 @@ void raycaster_render_world(Raycaster *r) {
     int no_clip_h;
     RayEnd end;
     Texture *tex;
+#if !NOCLEAR
+    render_clear(&RENDERER, 1);
+#endif
     for(i=-(TO_FIXED(r->fov)/2),p=0;i<TO_FIXED(r->fov)/2;
         i+=TO_FIXED(r->fov)/r->rays, p+=r->width/r->rays){
         end = raycaster_raycast(r, r->x, r->y, r->x+dcos(r->r+i)*r->len,
@@ -129,9 +133,11 @@ void raycaster_render_world(Raycaster *r) {
         no_clip_h = h;
         if(h > r->height) h = r->height;
         for(c=0;c<r->width/r->rays;c++){
+#if NOCLEAR
             render_vline(&RENDERER, 0, r->height/2-h/2, p+c, 0, 0, 0);
             render_vline(&RENDERER, r->height/2+h/2, r->height, p+c, 0,
                          0, 0);
+#endif
             if(r->texture){
             render_texvline(&RENDERER, tex, r->height/2-h/2,
                             r->height/2+h/2, r->height/2-no_clip_h/2,

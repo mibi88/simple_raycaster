@@ -62,7 +62,7 @@ void render_init(Renderer *renderer, int width, int height, char *title) {
     renderer->w = width;
     renderer->h = height;
     SDL_MaximizeWindow(renderer->window);
-    render_clear(renderer);
+    render_clear(renderer, 0);
 }
 
 void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b) {
@@ -167,8 +167,9 @@ void render_update(Renderer *renderer) {
     SDL_RenderPresent(renderer->renderer);
 }
 
-void render_clear(Renderer *renderer) {
-    SDL_SetRenderDrawColor(renderer->renderer, 0xFF, 0xFF, 0xFF,
+void render_clear(Renderer *renderer, char black) {
+    SDL_SetRenderDrawColor(renderer->renderer, black ? 0x00 : 0xFF,
+                           black ? 0x00 : 0xFF, black ? 0x00 : 0xFF,
                            SDL_ALPHA_OPAQUE);
     SDL_RenderClear(renderer->renderer);
 }
@@ -250,4 +251,3 @@ void render_main_loop(Renderer *renderer, void (*loop_function)(int)) {
     SDL_DestroyWindow(renderer->window);
     SDL_Quit();
 }
-
