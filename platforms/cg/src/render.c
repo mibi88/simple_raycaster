@@ -37,30 +37,33 @@
 #include <gint/display.h>
 #include <gint/timer.h>
 
+#define COLOR_FIX1 (DIV(TO_FIXED(15), TO_FIXED(255)))
+#define COLOR_FIX2 (DIV(TO_FIXED(31), TO_FIXED(255)))
+
 void render_init(Renderer *renderer, int width, int height, char *title) {
     dclear(C_WHITE);
 }
 
 void render_set_pixel(Renderer *renderer, int x, int y, int r, int g, int b) {
-    r = TO_INT(TO_FIXED(r)/255*15);
-    g = TO_INT(TO_FIXED(g)/255*31);
-    b = TO_INT(TO_FIXED(b)/255*15);
+    r = TO_INT(r*COLOR_FIX1);
+    g = TO_INT(g*COLOR_FIX2);
+    b = TO_INT(b*COLOR_FIX1);
     dpixel(x, y, C_RGB(r, g, b));
 }
 
 void render_line(Renderer *renderer, int x1, int y1, int x2, int y2, int r,
                  int g, int b) {
-    r = TO_INT(TO_FIXED(r)/255*15);
-    g = TO_INT(TO_FIXED(g)/255*31);
-    b = TO_INT(TO_FIXED(b)/255*15);
+     r = TO_INT(r*COLOR_FIX1);
+     g = TO_INT(g*COLOR_FIX2);
+     b = TO_INT(b*COLOR_FIX1);
     dline(x1, y1, x2, y2, C_RGB(r, g, b));
 }
 
 void render_rect(Renderer *renderer, int sx, int sy, int w, int h, int r,
                  int g, int b) {
-    r = TO_INT(TO_FIXED(r)/255*15);
-    g = TO_INT(TO_FIXED(g)/255*31);
-    b = TO_INT(TO_FIXED(b)/255*15);
+     r = TO_INT(r*COLOR_FIX1);
+     g = TO_INT(g*COLOR_FIX2);
+     b = TO_INT(b*COLOR_FIX1);
     drect(sx, sy, sx+w, sy+h, C_RGB(r, g, b));
 }
 
@@ -68,9 +71,9 @@ void render_vline(Renderer *renderer, int y1, int y2, int x, int r, int g,
                   int b) {
     int y;
     unsigned short int c;
-    r = TO_INT(TO_FIXED(r)/255*15);
-    g = TO_INT(TO_FIXED(g)/255*31);
-    b = TO_INT(TO_FIXED(b)/255*15);
+    r = TO_INT(r*COLOR_FIX1);
+    g = TO_INT(g*COLOR_FIX2);
+    b = TO_INT(b*COLOR_FIX1);
     c = C_RGB(r, g, b);
     if(x < 0 || x >= DWIDTH) return;
     if(y1 < 0) y1 = 0;
