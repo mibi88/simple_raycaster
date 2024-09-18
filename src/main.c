@@ -119,7 +119,7 @@ void loop(int fps) {
     if(render_keydown(renderer, KEY_UP)){
         oldx = raycaster.x;
         oldy = raycaster.y;
-        raycaster.x += MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED),
+        raycaster.x += MUL(DCOS(raycaster.r), DIV(TO_FIXED(SPEED),
                            TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
@@ -132,7 +132,7 @@ void loop(int fps) {
             raycaster.x = oldx;
         }
 #endif
-        raycaster.y += MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED),
+        raycaster.y += MUL(DSIN(raycaster.r), DIV(TO_FIXED(SPEED),
                            TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
@@ -149,7 +149,7 @@ void loop(int fps) {
     if(render_keydown(renderer, KEY_DOWN)){
         oldx = raycaster.x;
         oldy = raycaster.y;
-        raycaster.x -= MUL(dcos(raycaster.r), DIV(TO_FIXED(SPEED),
+        raycaster.x -= MUL(DCOS(raycaster.r), DIV(TO_FIXED(SPEED),
                            TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);
@@ -162,7 +162,7 @@ void loop(int fps) {
             raycaster.x = oldx;
         }
 #endif
-        raycaster.y -= MUL(dsin(raycaster.r), DIV(TO_FIXED(SPEED),
+        raycaster.y -= MUL(DSIN(raycaster.r), DIV(TO_FIXED(SPEED),
                            TO_FIXED(fps)));
 #if COLLISIONS
         tx = TO_INT(raycaster.x);

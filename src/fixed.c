@@ -83,3 +83,58 @@ fixed_t fsqrt(fixed_t x) {
     return lx;
 }
 
+fixed_t _lut_sqrt[TO_FIXED(SQRT_LUT_MAX)];
+fixed_t _lut_sqrt_big[SQRT_LUT_BIG_MAX];
+fixed_t _lut_sin[360];
+
+void linit(void) {
+    fixed_t i;
+    /* Initialize sqrt LUT (for small numbers) */
+    for(i=0;i<TO_FIXED(SQRT_LUT_MAX);i++){
+        _lut_sqrt[i] = fsqrt(i);
+    }
+    /* Initialize sqrt LUT (for big numbers) */
+    for(i=0;i<SQRT_LUT_BIG_MAX;i++){
+        _lut_sqrt_big[i] = fsqrt(TO_FIXED(i));
+    }
+    /* Initialize sine LUT */
+    for(i=0;i<360;i++){
+        _lut_sin[i] = dsin(TO_FIXED(i));
+    }
+    
+}
+
+fixed_t lsqrt(fixed_t x) {
+    int intx;
+    if(x < 0) return 0;
+    if(x < TO_FIXED(SQRT_LUT_MAX)){
+        return _lut_sqrt[x];
+    }else if(x < TO_FIXED(SQRT_LUT_BIG_MAX-1)){
+        intx = TO_INT(x);
+        return MUL(_lut_sqrt_big[intx+1], x-FLOOR(x))+
+               MUL(_lut_sqrt_big[intx], TO_FIXED(1)-(x-FLOOR(x)));
+    }
+    return fsqrt(x);
+}
+
+fixed_t ldcos(fixed_t x) {
+    return ldsin(x+TO_FIXED(90));
+}
+
+fixed_t ldsin(fixed_t x) {
+    int x1 = TO_INT(x);
+    int x2;
+    fixed_t v1;
+    fixed_t v2;
+    while(x1 >= 360) x1 -= 360;
+    while(x1 < 0) x1 += 360;
+    x2 = x1+1;
+    if(x2 >= 360) x2 = 0;
+    v1 = _lut_sin[x1];
+    v2 = _lut_sin[x2];
+    return MUL(v2, x-FLOOR(x))+MUL(v1, TO_FIXED(1)-(x-FLOOR(x)));
+}
+
+fixed_t ldtan(fixed_t x) {
+    return DIV(ldsin(x), ldcos(x));
+}

@@ -65,6 +65,11 @@ typedef uint64_t ufixed_t;
 #define SQRT_PRECISION 10
 #endif
 
+/* SQRT lookup table settings. */
+#define SQRT_LUT_MAX 2
+
+#define SQRT_LUT_BIG_MAX 200
+
 /* Convert a float to a fixed point number. */
 #define TO_FIXED(num) (fixed_t)((num)*(fixed_t)(1<<PRECISION))
 /* Convert a fixed point number to an integer. */
@@ -103,6 +108,26 @@ fixed_t dtan(fixed_t d);
  * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots
  */
 fixed_t fsqrt(fixed_t n);
+
+/* Math functions using lookup tables. linit initalizes the lookup tables. */
+void linit(void);
+
+fixed_t lsqrt(fixed_t x);
+
+fixed_t ldcos(fixed_t x);
+
+fixed_t ldsin(fixed_t x);
+
+fixed_t ldtan(fixed_t x);
+
+/* The default sqrt function. */
+#define SQRT lsqrt
+/* The default sine function for degrees. */
+#define DSIN ldsin
+/* The default cosine function for degrees. */
+#define DCOS ldcos
+/* The default tangent function for degrees. */
+#define DTAN ldtan
 
 #endif
 
