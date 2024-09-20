@@ -38,16 +38,20 @@
 /* See
  * https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula.
  */
-fixed_t dsin(fixed_t d) {
+fixed_t dsin(fixed_t org_d) {
     fixed_t v;
-    fixed_t org_d = d%TO_FIXED(360);
+    fixed_t d;
+    int flip = 1;
     while(org_d < TO_FIXED(0)) org_d += TO_FIXED(360);
+    while(org_d > TO_FIXED(360)) org_d -= TO_FIXED(360);
     d = org_d;
-    d %= TO_FIXED(180);
-    v = DIV(MUL(MUL(TO_FIXED(4), d), (TO_FIXED(180)-d)),
+    if(d > TO_FIXED(180)){
+        d -= TO_FIXED(180);
+        flip = -1;
+    }
+    v = DIV(MUL(4*d, (TO_FIXED(180)-d)),
             (TO_FIXED(40500)-MUL(d, (TO_FIXED(180)-d))));
-    if(org_d > TO_FIXED(180)) v = -v;
-    return v;
+    return v*flip;
 }
 
 fixed_t dcos(fixed_t d) {

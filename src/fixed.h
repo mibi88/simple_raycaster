@@ -78,7 +78,7 @@ typedef uint64_t ufixed_t;
 
 #define SQRT_LUT_BIG_MAX 200
 
-#define DIV_LUT_MAX 500
+#define DIV_LUT_MAX 300
 
 extern fixed_t _lut_div[DIV_LUT_MAX];
 extern ufixed_t _lut_udiv[DIV_LUT_MAX];
@@ -97,12 +97,15 @@ extern ufixed_t _lut_udiv[DIV_LUT_MAX];
 #define FLOOR(num) (num&~((1<<PRECISION)-1))
 
 /* Division using the lookup table. */
-#define FDIV(a, b) ((b) < TO_FIXED(DIV_LUT_MAX-1) && (b) >= 0 ? \
+#define FDIV(a, b) ((ABS(b) < TO_FIXED(DIV_LUT_MAX-1) && \
+                     ABS(b) >= TO_FIXED(1)) ? \
                     /* Use the lookup table */ \
-                    MUL(MUL(_lut_div[TO_INT(b)+1], (b)-FLOOR(b))+ \
-                        MUL(_lut_div[TO_INT(b)], \
-                            TO_FIXED(1)-((b)-FLOOR(b))), a) : \
-                    /* b is too big or negative, calculate the division. */ \
+                    MUL(MUL(_lut_div[TO_INT(ABS(b))+1], \
+                            ABS(b)-FLOOR(ABS(b)))+ \
+                        MUL(_lut_div[TO_INT(ABS(b))], \
+                            TO_FIXED(1)-(ABS(b)-FLOOR(ABS(b)))), a)* \
+                    (b < 0 ? -1 : 1) : \
+                    /* b is too big, calculate the division. */ \
                     DIV(a, b))
 
 /* Unsigned math */
@@ -120,13 +123,13 @@ extern ufixed_t _lut_udiv[DIV_LUT_MAX];
 #define UFLOOR(num) (num&~((1<<UPRECISION)-1))
 
 /* Division using the lookup table. */
-#define UFDIV(a, b) ((b) < UTO_FIXED(DIV_LUT_MAX-1) ? \
+#define UFDIV(a, b) (((b) < UTO_FIXED(DIV_LUT_MAX-1) && (b) >= UTO_FIXED(1)) ? \
                      /* Use the lookup table */ \
                      UMUL(UMUL(_lut_udiv[UTO_INT(b)+1], (b)-UFLOOR(b))+ \
                           UMUL(_lut_udiv[UTO_INT(b)], \
                                UTO_FIXED(1)-((b)-UFLOOR(b))), a) : \
                      /* b is too big, calculate the division. */ \
-                     UDIV(a, b))
+                     UMUL(a, UTO_FIXED(1)/UTO_INT(b)))
 /*****************/
 
 /* See
