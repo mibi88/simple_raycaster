@@ -86,22 +86,32 @@ fixed_t fsqrt(fixed_t x) {
 fixed_t _lut_sqrt[TO_FIXED(SQRT_LUT_MAX)];
 fixed_t _lut_sqrt_big[SQRT_LUT_BIG_MAX];
 fixed_t _lut_sin[360];
+fixed_t _lut_div[DIV_LUT_MAX];
+ufixed_t _lut_udiv[DIV_LUT_MAX];
 
 void linit(void) {
     fixed_t i;
-    /* Initialize sqrt LUT (for small numbers) */
+    /* Initialize the sqrt LUT (for small numbers) */
     for(i=0;i<TO_FIXED(SQRT_LUT_MAX);i++){
         _lut_sqrt[i] = fsqrt(i);
     }
-    /* Initialize sqrt LUT (for big numbers) */
+    /* Initialize the sqrt LUT (for big numbers) */
     for(i=0;i<SQRT_LUT_BIG_MAX;i++){
         _lut_sqrt_big[i] = fsqrt(TO_FIXED(i));
     }
-    /* Initialize sine LUT */
+    /* Initialize the sine LUT */
     for(i=0;i<360;i++){
         _lut_sin[i] = dsin(TO_FIXED(i));
     }
-    
+    /* Initialize the division LUTs. */
+    _lut_div[0] = FIXED_MAX;
+    for(i=1;i<DIV_LUT_MAX;i++){
+        _lut_div[i] = TO_FIXED(1)/i;
+    }
+    _lut_udiv[0] = UFIXED_MAX;
+    for(i=1;i<DIV_LUT_MAX;i++){
+        _lut_udiv[i] = UTO_FIXED(1)/i;
+    }
 }
 
 fixed_t lsqrt(fixed_t x) {

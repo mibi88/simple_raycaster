@@ -8,5 +8,7 @@ typedef struct {
     void *extradata;
 } Texture;
 
-#endif
+#define TEX_WIDTH(tex) ((tex)->width)
+#define TEX_HEIGHT(tex) ((tex)->height)
 
+#endif

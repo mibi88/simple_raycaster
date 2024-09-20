@@ -123,11 +123,11 @@ void raycaster_render_world(Raycaster *r) {
         if(end.x_axis_hit){
             l = r->x+MUL(DCOS(r->r+i), end.len);
             l = l-FLOOR(l);
-            l *= tex->width;
+            l *= TEX_WIDTH(tex);
         }else{
             l = r->y+MUL(DSIN(r->r+i), end.len);
             l = l-FLOOR(l);
-            l *= tex->width;
+            l *= TEX_WIDTH(tex);
         }
         if(r->fisheye_fix) end.len = MUL(end.len, DCOS(i));
         h = TO_INT(DIV(TO_FIXED(r->height), (end.len ? end.len : 1)));

@@ -40,7 +40,15 @@
 #define COLOR_FIX1 (DIV(TO_FIXED(15), TO_FIXED(255)))
 #define COLOR_FIX2 (DIV(TO_FIXED(31), TO_FIXED(255)))
 
+fixed_t _lut_fog[256];
+
 void render_init(Renderer *renderer, int width, int height, char *title) {
+    int i;
+    /* Generate a LUT for the fog */
+    for(i=0;i<256;i++){
+        _lut_fog[i] = TO_FIXED(i)/255;
+    }
+    /* Clear the screen */
     dclear(C_WHITE);
 }
 
@@ -93,26 +101,29 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
     int n;
     int t;
     uint16_t tmp;
-    fixed_t m = TO_FIXED(fog)/255;
+    fixed_t m = _lut_fog[fog&0xFF];
     unsigned int h = ABS(ty2-ty1);
-    ufixed_t texinc = UTO_FIXED(tex->height)/(h ? h : 1);
+    ufixed_t texinc = UFDIV(UTO_FIXED(tex->i->height), UTO_FIXED(h ? h : 1));
     if(x < 0 || x >= DWIDTH) return;
     if(y1 < 0) y1 = 0;
     else if(y1 >= DHEIGHT) y1 = DHEIGHT-1;
     if(y2 >= DHEIGHT) y2 = DHEIGHT-1;
     else if(y2 < 0) y2 = 0;
-    if(l >= tex->width) l = tex->width-1;
+    if(l >= tex->i->width) l = tex->i->width-1;
     else if(l < 0) l = 0;
-    for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
-        p = UTO_INT(texinc*t);
-        if(p < 0) p = 0;
-        else if(p >= tex->height) p = tex->height-1;
-        c = ((uint16_t*)tex->data)[p*tex->width+l];
+    for(n=0;n<tex->i->width;n++){
+        c = ((uint16_t*)tex->i->data)[n*tex->i->width+l];
         tmp = c;
         c = TO_INT((tmp&0x1F)*m)&0x1F;
         c |= (TO_INT(((tmp>>5)&0x3F)*m)&0x3F)<<5;
         c |= (TO_INT(((tmp>>11)&0x1F)*m)&0x1F)<<11;
-        gint_vram[y*DWIDTH+x] = c;
+        tex->stripe[n] = c;
+    }
+    for(t=y1-ty1,n=0,y=y1;y<y2;y+=y1<y2 ? 1 : -1,n++,t++){
+        p = UTO_INT(texinc*t);
+        if(p < 0) p = 0;
+        else if(p >= tex->i->height) p = tex->i->height-1;
+        gint_vram[y*DWIDTH+x] = tex->stripe[p];
     }
 }
 

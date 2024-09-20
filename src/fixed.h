@@ -42,6 +42,10 @@
 #include <config.h>
 
 #if FAST
+#define FIXED_MAX INT32_MAX
+#define FIXED_MIN INT32_MIN
+#define UFIXED_MAX UINT32_MAX
+#define UFIXED_MIN UINT32_MIN
 /* The fixed point type (to make the code easier to read). */
 typedef int32_t fixed_t;
 typedef uint32_t ufixed_t;
@@ -53,6 +57,10 @@ typedef uint32_t ufixed_t;
 /* The number of iterations when calculating the square root */
 #define SQRT_PRECISION 5
 #else
+#define FIXED_MAX INT64_MAX
+#define FIXED_MIN INT64_MIN
+#define UFIXED_MAX UINT64_MAX
+#define UFIXED_MIN UINT64_MIN
 /* The fixed point type (to make the code easier to read). */
 typedef int64_t fixed_t;
 typedef uint64_t ufixed_t;
@@ -70,6 +78,11 @@ typedef uint64_t ufixed_t;
 
 #define SQRT_LUT_BIG_MAX 200
 
+#define DIV_LUT_MAX 500
+
+extern fixed_t _lut_div[DIV_LUT_MAX];
+extern ufixed_t _lut_udiv[DIV_LUT_MAX];
+
 /* Convert a float to a fixed point number. */
 #define TO_FIXED(num) (fixed_t)((num)*(fixed_t)(1<<PRECISION))
 /* Convert a fixed point number to an integer. */
@@ -83,6 +96,15 @@ typedef uint64_t ufixed_t;
 /* Fixed point floor function. */
 #define FLOOR(num) (num&~((1<<PRECISION)-1))
 
+/* Division using the lookup table. */
+#define FDIV(a, b) ((b) < TO_FIXED(DIV_LUT_MAX-1) && (b) >= 0 ? \
+                    /* Use the lookup table */ \
+                    MUL(MUL(_lut_div[TO_INT(b)+1], (b)-FLOOR(b))+ \
+                        MUL(_lut_div[TO_INT(b)], \
+                            TO_FIXED(1)-((b)-FLOOR(b))), a) : \
+                    /* b is too big or negative, calculate the division. */ \
+                    DIV(a, b))
+
 /* Unsigned math */
 /* Convert a float to a fixed point number. */
 #define UTO_FIXED(num) (ufixed_t)((num)*(ufixed_t)((ufixed_t)1<<UPRECISION))
@@ -93,6 +115,18 @@ typedef uint64_t ufixed_t;
 
 /* Divide the fixed point number a by the fixed point number b. */
 #define UDIV(a, b) (((a)<<UPRECISION)/(b))
+
+/* Fixed point floor function. */
+#define UFLOOR(num) (num&~((1<<UPRECISION)-1))
+
+/* Division using the lookup table. */
+#define UFDIV(a, b) ((b) < UTO_FIXED(DIV_LUT_MAX-1) ? \
+                     /* Use the lookup table */ \
+                     UMUL(UMUL(_lut_udiv[UTO_INT(b)+1], (b)-UFLOOR(b))+ \
+                          UMUL(_lut_udiv[UTO_INT(b)], \
+                               UTO_FIXED(1)-((b)-UFLOOR(b))), a) : \
+                     /* b is too big, calculate the division. */ \
+                     UDIV(a, b))
 /*****************/
 
 /* See
@@ -130,4 +164,3 @@ fixed_t ldtan(fixed_t x);
 #define DTAN ldtan
 
 #endif
-

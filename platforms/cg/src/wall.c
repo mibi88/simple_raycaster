@@ -32,11 +32,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef WALL_H
-#define WALL_H
-
 #include <texture.h>
+#include <stdint.h>
 
-extern Texture wall;
+extern bopti_image_t _wall;
+uint16_t stripe[16];
 
-#endif
+Texture wall = {&_wall, stripe};

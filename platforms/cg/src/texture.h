@@ -36,7 +36,14 @@
 #define TEXTURE_H
 
 #include <gint/display.h>
+#include <stdint.h>
 
-typedef bopti_image_t Texture;
+typedef struct {
+    bopti_image_t *i;
+    uint16_t *stripe;
+} Texture;
+
+#define TEX_WIDTH(tex) ((tex)->i->width)
+#define TEX_HEIGHT(tex) ((tex)->i->height)
+
 #endif
-
