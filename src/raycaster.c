@@ -126,6 +126,7 @@ void raycaster_render_world(Raycaster *r) {
     Sprite *sprite;
     fixed_t a;
     int x;
+    fixed_t inc;
     fixed_t l;
     int no_clip_h;
     RayEnd end;
@@ -167,10 +168,10 @@ void raycaster_render_world(Raycaster *r) {
                          0, 0);
 #endif
             if(r->texture){
-            render_texvline(&RENDERER, tex, r->height/2-h/2,
-                            r->height/2+h/2, r->height/2-no_clip_h/2,
-                            r->height/2+no_clip_h/2, p+c, TO_INT(l),
-                            255-TO_INT(end.len/r->len*255));
+                render_texvline(&RENDERER, tex, r->height/2-h/2,
+                                r->height/2+h/2, r->height/2-no_clip_h/2,
+                                r->height/2+no_clip_h/2, p+c, TO_INT(l),
+                                255-TO_INT(end.len/r->len*255));
             }else{
                 render_vline(&RENDERER, r->height/2-h/2,
                              r->height/2+h/2, p+c,
@@ -182,10 +183,9 @@ void raycaster_render_world(Raycaster *r) {
     }
     if(r->sprite_num > 0){
         for(p=0;p<r->sprite_num;p++){
-            r->sprites[p].dist = SQRT((r->x-r->sprites[p].x)*
-                                      (r->x-r->sprites[p].x)+
-                                      (r->y-r->sprites[p].y)*
-                                      (r->y-r->sprites[p].y));
+            sprite = r->sprites+p;
+            sprite->dist = SQRT(MUL(r->x-sprite->x, r->x-sprite->x)+
+                                MUL(r->y-sprite->y, r->y-sprite->y));
         }
         if(r->sprite_num > 1){
             qsort(r->sprites, r->sprite_num, sizeof(Sprite),
@@ -199,12 +199,24 @@ void raycaster_render_world(Raycaster *r) {
             while(a > TO_FIXED(360)) a -= TO_FIXED(360);
             a = r->r-r->fov/2-a;
             a = TO_FIXED(r->fov/2)-a;
-            if(a > 270 && r->r < 90) a += TO_FIXED(360);
-            if(r->r > 270 && a < 90) a += TO_FIXED(360);
-            printf("%f\n", a/(float)(1<<PRECISION));
-            if(a >= 0 && a < TO_FIXED(r->fov)){
-                render_vline(&RENDERER, 0, r->height, TO_INT(a/r->fov*r->width),
-                             255, 0, 0);
+            /*if(a > 270 && r->r < 90) a += TO_FIXED(360);
+            if(r->r > 270 && a < 90) a += TO_FIXED(360);*/
+            h = TO_INT(DIV(TO_FIXED(r->height),
+                           (sprite->dist ? sprite->dist : 1)));
+            no_clip_h = h;
+            if(h > r->height) h = r->height;
+            x = TO_INT(a/r->fov*r->width);
+            if(x+no_clip_h/2 >= 0 && x-no_clip_h/2 < r->width){
+                for(i=x-no_clip_h/2;i<x+no_clip_h/2;i++){
+                    if(i >= 0 && i < r->width){
+                        if(r->zbuffer[i] > sprite->dist){
+                            render_vline(&RENDERER, r->height/2-h/2,
+                                         r->height/2+h/2, i, 0,
+                                         (255-TO_INT(sprite->dist/r->len*255)),
+                                         0);
+                        }
+                    }
+                }
             }
         }
     }
