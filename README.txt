@@ -22,3 +22,7 @@ I may also add the following features if I'm motivated enough:
 [ ] Camera pitch + view height
 [ ] Variable height floor/ceiling
 [ ] Angled walls
+
+    KNOWN BUGS
+
+[ ] Sprites not displayed in some cases when looking at them from behind.
