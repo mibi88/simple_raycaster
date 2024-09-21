@@ -141,6 +141,8 @@ fixed_t dcos(fixed_t d);
 
 fixed_t dtan(fixed_t d);
 
+fixed_t datan2(fixed_t x, fixed_t y);
+
 /* Using Heron's method with a binary initial estimate. See
  * https://en.wikipedia.org/wiki/Methods_of_computing_square_roots
  */

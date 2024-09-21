@@ -42,7 +42,11 @@
 #define MAP_WIDTH  32
 #define MAP_HEIGHT 32
 
+#define SPRITE_NUM 3
+
 #include <wall.h>
+
+#include <sprite.h>
 
 #define SCREEN_WIDTH  640
 #define SCREEN_HEIGHT 480
@@ -209,9 +213,16 @@ void loop(int fps) {
 }
 
 int main(int argc, char **argv) {
+    Sprite sprites[SPRITE_NUM] = {
+        {TO_FIXED(1.5), TO_FIXED(2.5), 0, &sprite, NULL},
+        {TO_FIXED(8.5), TO_FIXED(8.5), 0, &sprite, NULL},
+        {TO_FIXED(8.5), TO_FIXED(9.5), 0, &sprite, NULL},
+    };
+    fixed_t zbuffer[SCREEN_WIDTH];
     raycaster_init(&raycaster, SCREEN_WIDTH, SCREEN_HEIGHT, "DDA Test", map,
                    MAP_WIDTH, MAP_HEIGHT, &wall, TO_FIXED(1.5), TO_FIXED(1.5),
-                   TO_FIXED(45));
+                   TO_FIXED(45), zbuffer);
+    raycaster_set_sprites(&raycaster, sprites, SPRITE_NUM);
     render_main_loop(renderer, loop);
     return 0;
 }

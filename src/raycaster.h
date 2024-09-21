@@ -52,6 +52,13 @@ typedef struct {
 } RayEnd;
 
 typedef struct {
+    fixed_t x, y;
+    fixed_t dist;
+    Texture *texture;
+    void *extra_data;
+} Sprite;
+
+typedef struct {
     /* Settings */
     int fov;
     int rays;
@@ -65,10 +72,13 @@ typedef struct {
     char texture;
     char fisheye_fix;
     /* Data */
+    fixed_t *zbuffer;
     Texture *tex;
     char *map;
     int map_width;
     int map_height;
+    Sprite *sprites;
+    int sprite_num;
     /* View */
     fixed_t x;
     fixed_t y;
@@ -78,7 +88,9 @@ typedef struct {
 
 void raycaster_init(Raycaster *r, int width, int height, char *title,
                     char *map, int map_width, int map_height, Texture *tex,
-                    fixed_t x, fixed_t y, fixed_t a);
+                    fixed_t x, fixed_t y, fixed_t a, fixed_t *zbuffer);
+
+void raycaster_set_sprites(Raycaster *r, Sprite *sprites, int sprite_num);
 
 void raycaster_render_map(Raycaster *r);
 

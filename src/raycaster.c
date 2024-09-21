@@ -34,11 +34,13 @@
 
 #include <raycaster.h>
 
+#include <stdlib.h>
+
 #define RENDERER r->renderer
 
 void raycaster_init(Raycaster *r, int width, int height, char *title,
                     char *map, int map_width, int map_height, Texture *tex,
-                    fixed_t x, fixed_t y, fixed_t a) {
+                    fixed_t x, fixed_t y, fixed_t a, fixed_t *zbuffer) {
     linit();
     render_init(&RENDERER, width, height, title);
     r->width = render_get_width(&RENDERER);
@@ -59,10 +61,17 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
     r->map = map;
     r->map_width = map_width;
     r->map_height = map_height;
+    r->zbuffer = zbuffer;
+    r->sprite_num = 0;
     /* View */
     r->x = x;
     r->y = y;
     r->r = a;
+}
+
+void raycaster_set_sprites(Raycaster *r, Sprite *sprites, int sprite_num) {
+    r->sprites = sprites;
+    r->sprite_num = sprite_num;
 }
 
 Texture *_get_tile_tex(Raycaster *r, int cx, int cy) {
@@ -92,9 +101,21 @@ void raycaster_render_map(Raycaster *r) {
                     TO_INT((r->y+MUL(DSIN(r->r+i), end.len))*r->scale), 0, 255,
                     0);
     }
+    for(x=0;x<r->sprite_num;x++){
+        render_set_pixel(&RENDERER, TO_INT(r->sprites[x].x*r->scale),
+                         TO_INT(r->sprites[x].y*r->scale), 0, 0, 255);
+    }
     render_line(&RENDERER, TO_INT(r->x*r->scale), TO_INT(r->y*r->scale),
                 TO_INT((r->x+DCOS(r->r))*r->scale),
                 TO_INT((r->y+DSIN(r->r))*r->scale), 255, 0, 0);
+}
+
+int _raycaster_sort_sprites(const void *item1, const void *item2) {
+    Sprite *sprite1 = (Sprite*)item1;
+    Sprite *sprite2 = (Sprite*)item2;
+    if(sprite1->dist < sprite2->dist) return -1;
+    if(sprite1->dist == sprite2->dist) return 0;
+    else return 1;
 }
 
 void raycaster_render_world(Raycaster *r) {
@@ -102,10 +123,15 @@ void raycaster_render_world(Raycaster *r) {
     int p;
     int c;
     int h;
+    Sprite *sprite;
+    fixed_t a;
+    int x;
     fixed_t l;
     int no_clip_h;
     RayEnd end;
     Texture *tex;
+    while(r->r < 0) r->r += TO_FIXED(360);
+    while(r->r > TO_FIXED(360)) r->r -= TO_FIXED(360);
 #if !NOCLEAR
     render_clear(&RENDERER, 1);
 #endif
@@ -113,6 +139,7 @@ void raycaster_render_world(Raycaster *r) {
         i+=TO_FIXED(r->fov)/r->rays, p+=r->width/r->rays){
         end = raycaster_raycast(r, r->x, r->y, r->x+DCOS(r->r+i)*r->len,
                                 r->y+DSIN(r->r+i)*r->len);
+        r->zbuffer[p] = end.len;
         if(!end.hit){
             for(c=0;c<r->width/r->rays;c++){
                 render_vline(&RENDERER, 0, r->height, p+c, 0, 0, 0);
@@ -150,6 +177,34 @@ void raycaster_render_world(Raycaster *r) {
                              (255-TO_INT(end.len/r->len*255))*(!end.x_axis_hit),
                              (255-TO_INT(end.len/r->len*255))*end.x_axis_hit,
                              0);
+            }
+        }
+    }
+    if(r->sprite_num > 0){
+        for(p=0;p<r->sprite_num;p++){
+            r->sprites[p].dist = SQRT((r->x-r->sprites[p].x)*
+                                      (r->x-r->sprites[p].x)+
+                                      (r->y-r->sprites[p].y)*
+                                      (r->y-r->sprites[p].y));
+        }
+        if(r->sprite_num > 1){
+            qsort(r->sprites, r->sprite_num, sizeof(Sprite),
+                  _raycaster_sort_sprites);
+        }
+        for(p=0;p<r->sprite_num;p++){
+            sprite = r->sprites+p;
+            /* Calculate the position of the sprite on screen. */
+            a = datan2(sprite->y-r->y, sprite->x-r->x);
+            while(a < 0) a += TO_FIXED(360);
+            while(a > TO_FIXED(360)) a -= TO_FIXED(360);
+            a = r->r-r->fov/2-a;
+            a = TO_FIXED(r->fov/2)-a;
+            if(a > 270 && r->r < 90) a += TO_FIXED(360);
+            if(r->r > 270 && a < 90) a += TO_FIXED(360);
+            printf("%f\n", a/(float)(1<<PRECISION));
+            if(a >= 0 && a < TO_FIXED(r->fov)){
+                render_vline(&RENDERER, 0, r->height, TO_INT(a/r->fov*r->width),
+                             255, 0, 0);
             }
         }
     }

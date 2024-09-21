@@ -62,6 +62,12 @@ fixed_t dtan(fixed_t d) {
     return DIV(dsin(d), dcos(d));
 }
 
+fixed_t datan2(fixed_t x, fixed_t y) {
+    #include <math.h>
+    return TO_FIXED(atan2(x/(float)(1<<PRECISION), y/(float)(1<<PRECISION))/
+                    3.14159*180);
+}
+
 #define HALF (1<<PRECISION>>1)
 
 fixed_t fsqrt(fixed_t x) {
