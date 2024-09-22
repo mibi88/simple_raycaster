@@ -65,8 +65,8 @@ fixed_t dtan(fixed_t d) {
 fixed_t datan2(fixed_t x, fixed_t y) {
     /* TODO: Implement it in fixed point. */
     #include <math.h>
-    return TO_FIXED(atan2(x/(float)(1<<PRECISION), y/(float)(1<<PRECISION))/
-                    3.14159*180);
+    return TO_FIXED(atan2(x/(float)(1<<PRECISION), y/(float)(1<<PRECISION))*
+                    (180/3.14159));
 }
 
 #define HALF (1<<PRECISION>>1)
