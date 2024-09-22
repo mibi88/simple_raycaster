@@ -12,13 +12,19 @@ find_package(Gint 2.8 REQUIRED)
 set(SOURCES
   src/render.c
   src/wall.c
+  src/wood.c
+  src/sprite.c
   ../../src/main.c
   ../../src/fixed.c
   ../../src/raycaster.c
+  ../../src/map.c
+  ../../conv/testmap.c
   # ...
 )
 set(ASSETS
   assets/wall.png
+  assets/wood.png
+  assets/sprite.png
   # ...
 )
 
@@ -26,6 +32,7 @@ set(INCDIRS
   ../platforms/cg/src
   src
   ../../src
+  ../../conv
 )
 
 fxconv_declare_assets(${ASSETS} WITH_METADATA)

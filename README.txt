@@ -15,6 +15,7 @@ This project is licensed under the BSD-3-Clause license.
 
 [ ] Optimize raycasting to avoid two divisions
 [x] Sprites
+[ ] Fix CG port
 
 I may also add the following features if I'm motivated enough:
 

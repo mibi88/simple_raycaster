@@ -217,7 +217,7 @@ void raycaster_render_world(Raycaster *r) {
             no_clip_h = h;
             sprite->h = h;
             if(h > r->height) h = r->height;
-            inc = TO_FIXED(sprite->texture->width)/no_clip_h;
+            inc = TO_FIXED(TEX_WIDTH(sprite->texture))/no_clip_h;
             if(x+no_clip_h/2 >= 0 && x-no_clip_h/2 < r->width){
                 for(t=0,i=x-no_clip_h/2;i<x+no_clip_h/2;i++,t++){
                     if(i >= 0 && i < r->width){

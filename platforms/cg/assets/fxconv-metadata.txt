@@ -1,3 +1,9 @@
 wall.png:
   type: bopti-image
   name: _wall
+wood.png:
+  type: bopti-image
+  name: _wood
+sprite.png:
+  type: bopti-image
+  name: _sprite

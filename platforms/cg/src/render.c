@@ -113,6 +113,10 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
     else if(l < 0) l = 0;
     for(n=0;n<tex->i->width;n++){
         c = ((uint16_t*)tex->i->data)[n*tex->i->width+l];
+        if(c == image_alpha(IMAGE_RGB565A) && tex->i->format == IMAGE_RGB565A){
+            tex->stripe[n] = image_alpha(IMAGE_RGB565A);
+            continue;
+        }
         tmp = c;
         c = TO_INT((tmp&0x1F)*m)&0x1F;
         c |= (TO_INT(((tmp>>5)&0x3F)*m)&0x3F)<<5;
@@ -123,6 +127,8 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
         p = UTO_INT(texinc*t);
         if(p < 0) p = 0;
         else if(p >= tex->i->height) p = tex->i->height-1;
+        if(tex->stripe[p] == image_alpha(IMAGE_RGB565A) &&
+           tex->i->format == IMAGE_RGB565A) continue;
         gint_vram[y*DWIDTH+x] = tex->stripe[p];
     }
 }
