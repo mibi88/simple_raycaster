@@ -14,7 +14,7 @@ This project is licensed under the BSD-3-Clause license.
     TODO
 
 [ ] Optimize raycasting to avoid two divisions
-[ ] Sprites
+[x] Sprites
 
 I may also add the following features if I'm motivated enough:
 
