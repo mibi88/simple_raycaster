@@ -28,3 +28,12 @@ I may also add the following features if I'm motivated enough:
 Ticked elements are fixed.
 
 [x] Sprites not displayed in some cases when looking at them from behind.
+
+    USEFUL LINKS
+
+ - https://wynnliam.github.io/raycaster/news/tutorial/2019/04/03/raycaster-part
+   -02.html
+ - https://www.youtube.com/watch?v=NbSee-XM7WA
+ - https://www.youtube.com/watch?v=gYRrGTC7GtA
+ - https://lodev.org/cgtutor/raycasting.html
+ - https://en.wikipedia.org/wiki/Bh%C4%81skara_I's_sine_approximation_formula
