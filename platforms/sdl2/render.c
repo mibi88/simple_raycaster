@@ -62,6 +62,7 @@ void render_init(Renderer *renderer, int width, int height, char *title) {
     renderer->w = width;
     renderer->h = height;
     SDL_MaximizeWindow(renderer->window);
+    SDL_SetRenderDrawBlendMode(renderer->renderer, SDL_BLENDMODE_BLEND);
     render_clear(renderer, 0);
 }
 
@@ -118,6 +119,7 @@ void render_texvline(Renderer *renderer, Texture *tex, int y1, int y2, int ty1,
         if(SDL_UpdateTexture(tex->extradata, NULL, tex->data, tex->width*4)){
             return;
         }
+        SDL_SetTextureBlendMode(tex->extradata, SDL_BLENDMODE_BLEND);
     }
     if(l < 0 || l >= tex->width) return;
     texrect.x = l;

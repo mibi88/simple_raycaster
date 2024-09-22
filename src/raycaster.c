@@ -195,6 +195,7 @@ void raycaster_render_world(Raycaster *r) {
         }
         for(p=0;p<r->sprite_num;p++){
             sprite = r->sprites+p;
+            if(sprite->dist > TO_FIXED(r->len)) continue;
             /* Calculate the position of the sprite on screen. */
             a = datan2(sprite->y-r->y, sprite->x-r->x);
             if(a < 0) a += TO_FIXED(360);
