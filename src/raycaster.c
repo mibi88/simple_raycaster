@@ -195,7 +195,11 @@ void raycaster_render_world(Raycaster *r) {
         }
         for(p=0;p<r->sprite_num;p++){
             sprite = r->sprites+p;
-            if(sprite->dist > TO_FIXED(r->len)) continue;
+            if(sprite->dist > TO_FIXED(r->len)){
+                sprite->screen_x = -1;
+                sprite->h = 0;
+                continue;
+            }
             /* Calculate the position of the sprite on screen. */
             a = datan2(sprite->y-r->y, sprite->x-r->x);
             if(a < 0) a += TO_FIXED(360);
@@ -204,9 +208,11 @@ void raycaster_render_world(Raycaster *r) {
             if(a > TO_FIXED(270) && r->r < TO_FIXED(90)) tmp += TO_FIXED(360);
             if(r->r > TO_FIXED(270) && a < TO_FIXED(90)) tmp -= TO_FIXED(360);
             x = r->width-TO_INT(tmp/r->fov*r->width);
+            sprite->screen_x = x;
             h = TO_INT(DIV(TO_FIXED(r->height),
                            (sprite->dist ? sprite->dist : 1)));
             no_clip_h = h;
+            sprite->h = h;
             if(h > r->height) h = r->height;
             inc = TO_FIXED(sprite->texture->width)/no_clip_h;
             if(x+no_clip_h/2 >= 0 && x-no_clip_h/2 < r->width){

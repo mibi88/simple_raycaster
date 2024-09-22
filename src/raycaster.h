@@ -55,6 +55,9 @@ typedef struct {
     fixed_t x, y;
     fixed_t dist;
     Texture *texture;
+    char visible;
+    int screen_x;
+    int h; /* without clipping. */
     void *extra_data;
 } Sprite;
 
