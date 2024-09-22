@@ -32,68 +32,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RAYCASTER_H
-#define RAYCASTER_H
-
-#include <fixed.h>
-#include <render.h>
-#include <texture.h>
 #include <map.h>
 
-typedef struct {
-    fixed_t x, y;
-} Vector2;
-
-typedef struct {
-    fixed_t len;
-    int cx, cy;
-    unsigned char hit;
-    char c;
-    char x_axis_hit;
-} RayEnd;
-
-typedef struct {
-    /* Settings */
-    int fov;
-    int rays;
-    int scale;
-    int len;
-    int speed;
-    int rotspeed;
-    int width;
-    int height;
-    /* Features */
-    char texture;
-    char fisheye_fix;
-    /* Data */
-    fixed_t *zbuffer;
-    Map *map;
-    int map_width;
-    int map_height;
-    Sprite *sprites;
-    int sprite_num;
-    /* View */
-    fixed_t x;
-    fixed_t y;
-    fixed_t r;
-    Renderer renderer;
-} Raycaster;
-
-void raycaster_init(Raycaster *r, int width, int height, char *title,
-                    Map *map, fixed_t x, fixed_t y, fixed_t a,
-                    fixed_t *zbuffer);
-
-void raycaster_set_sprites(Raycaster *r, Sprite *sprites, int sprite_num);
-
-void raycaster_render_map(Raycaster *r);
-
-void raycaster_render_world(Raycaster *r);
-
-RayEnd raycaster_raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2,
-                         fixed_t y2);
-
-void raycaster_render_map(Raycaster *r);
-
-
-
-#endif
+int map_get_tile(Map *map, int x, int y) {
+    if(x >= 0 && x < map->width && y >= 0 && y < map->height){
+        return map->data[y*map->width+x];
+    }
+    return -1;
+}

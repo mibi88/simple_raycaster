@@ -35,6 +35,7 @@
 #include <render.h>
 #include <fixed.h>
 #include <raycaster.h>
+#include <map.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,7 +45,7 @@
 
 #define SPRITE_NUM 3
 
-#include <wall.h>
+#include <testmap.h>
 
 #include <sprite.h>
 
@@ -70,39 +71,7 @@
 
 Raycaster raycaster;
 Renderer *renderer = &raycaster.renderer;
-
-char map[MAP_WIDTH*MAP_HEIGHT] = "################################"
-                                 "#  #   #                       #"
-                                 "#      #                       #"
-                                 "###    #           #           #"
-                                 "#      #           #           #"
-                                 "#  #   #        #  #  #        #"
-                                 "#                # # #         #"
-                                 "########          ###          #"
-                                 "#                  #           #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                #             #"
-                                 "#               #              #"
-                                 "#              #               #"
-                                 "#             #                #"
-                                 "#            #                 #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                #     #       #"
-                                 "#                              #"
-                                 "#               #       #      #"
-                                 "#                #     #       #"
-                                 "#                 #####        #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "#                              #"
-                                 "################################";
+Map *map = &testmap;
 
 char lock = 0;
 
@@ -129,7 +98,7 @@ void loop(int fps) {
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
-            if(map[ty*MAP_WIDTH+tx] != ' '){
+            if(map_get_tile(map, tx, ty) > 0){
                 raycaster.x = oldx;
             }
         }else{
@@ -142,7 +111,7 @@ void loop(int fps) {
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
-            if(map[ty*MAP_WIDTH+tx] != ' '){
+            if(map_get_tile(map, tx, ty) > 0){
                 raycaster.y = oldy;
             }
         }else{
@@ -159,7 +128,7 @@ void loop(int fps) {
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
-            if(map[ty*MAP_WIDTH+tx] != ' '){
+            if(map_get_tile(map, tx, ty) > 0){
                 raycaster.x = oldx;
             }
         }else{
@@ -172,7 +141,7 @@ void loop(int fps) {
         tx = TO_INT(raycaster.x);
         ty = TO_INT(raycaster.y);
         if(tx >= 0 && tx < MAP_WIDTH && ty >= 0 && ty < MAP_HEIGHT){
-            if(map[ty*MAP_WIDTH+tx] != ' '){
+            if(map_get_tile(map, tx, ty) > 0){
                 raycaster.y = oldy;
             }
         }else{
@@ -214,15 +183,13 @@ void loop(int fps) {
 
 int main(int argc, char **argv) {
     Sprite sprites[SPRITE_NUM] = {
-        {TO_FIXED(1.5), TO_FIXED(2.5), 0, &sprite, NULL},
-        {TO_FIXED(8.5), TO_FIXED(8.5), 0, &sprite, NULL},
-        {TO_FIXED(8.5), TO_FIXED(9.5), 0, &sprite, NULL},
+        {TO_FIXED(1.5), TO_FIXED(2.5), 0, &sprite, 1, 0, 0, NULL},
+        {TO_FIXED(8.5), TO_FIXED(8.5), 0, &sprite, 1, 0, 0, NULL},
+        {TO_FIXED(8.5), TO_FIXED(9.5), 0, &sprite, 1, 0, 0, NULL},
     };
     fixed_t zbuffer[SCREEN_WIDTH];
-    raycaster_init(&raycaster, SCREEN_WIDTH, SCREEN_HEIGHT, "DDA Test", map,
-                   MAP_WIDTH, MAP_HEIGHT, &wall, TO_FIXED(1.5), TO_FIXED(1.5),
-                   TO_FIXED(45), zbuffer);
-    raycaster_set_sprites(&raycaster, sprites, SPRITE_NUM);
+    raycaster_init(&raycaster, SCREEN_WIDTH, SCREEN_HEIGHT, "Simple Raycaster",
+                   map, TO_FIXED(1.5), TO_FIXED(1.5), TO_FIXED(45), zbuffer);
     render_main_loop(renderer, loop);
     return 0;
 }

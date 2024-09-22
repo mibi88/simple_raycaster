@@ -39,8 +39,8 @@
 #define RENDERER r->renderer
 
 void raycaster_init(Raycaster *r, int width, int height, char *title,
-                    char *map, int map_width, int map_height, Texture *tex,
-                    fixed_t x, fixed_t y, fixed_t a, fixed_t *zbuffer) {
+                    Map *map, fixed_t x, fixed_t y, fixed_t a,
+                    fixed_t *zbuffer) {
     linit();
     render_init(&RENDERER, width, height, title);
     r->width = render_get_width(&RENDERER);
@@ -48,8 +48,8 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
     /* Settings */
     r->fov = 60;
     r->rays = r->width;
-    r->scale = r->width/map_width;
-    if(r->height/map_height < r->scale) r->scale = r->height/map_height;
+    r->scale = r->width/map->width;
+    if(r->height/map->height < r->scale) r->scale = r->height/map->height;
     r->len = 25;
     r->speed = 5;
     r->rotspeed = 100;
@@ -57,12 +57,12 @@ void raycaster_init(Raycaster *r, int width, int height, char *title,
     r->texture = 1;
     r->fisheye_fix = 1;
     /* Data */
-    r->tex = tex;
     r->map = map;
-    r->map_width = map_width;
-    r->map_height = map_height;
+    r->map_width = map->width;
+    r->map_height = map->height;
     r->zbuffer = zbuffer;
-    r->sprite_num = 0;
+    r->sprite_num = map->sprite_num;
+    r->sprites = map->sprites;
     /* View */
     r->x = x;
     r->y = y;
@@ -75,7 +75,10 @@ void raycaster_set_sprites(Raycaster *r, Sprite *sprites, int sprite_num) {
 }
 
 Texture *_get_tile_tex(Raycaster *r, int cx, int cy) {
-    return r->tex;
+    if(cx >= 0 && cx < r->map_width && cy >= 0 && cy < r->map_height){
+        return r->map->tileset[r->map->data[cy*r->map_width+cx]-1].texture;
+    }
+    return r->map->tileset[0].texture;
 }
 
 void raycaster_render_map(Raycaster *r) {
@@ -85,7 +88,7 @@ void raycaster_render_map(Raycaster *r) {
     render_clear(&RENDERER, 0);
     for(y=0;y<r->map_height;y++){
         for(x=0;x<r->map_width;x++){
-            if(r->map[y*r->map_width+x] != ' '){
+            if(r->map->data[y*r->map_width+x]){
                 render_rect(&RENDERER, x*r->scale, y*r->scale, r->scale,
                             r->scale, 0, 0, 0);
             }
@@ -195,7 +198,7 @@ void raycaster_render_world(Raycaster *r) {
         }
         for(p=0;p<r->sprite_num;p++){
             sprite = r->sprites+p;
-            if(sprite->dist > TO_FIXED(r->len)){
+            if(sprite->dist > TO_FIXED(r->len) || !sprite->visible){
                 sprite->screen_x = -1;
                 sprite->h = 0;
                 continue;
@@ -288,7 +291,7 @@ RayEnd raycaster_raycast(Raycaster *r, fixed_t x1, fixed_t y1, fixed_t x2,
         if(px >= 0 && px < r->map_width && py >= 0 && py < r->map_height){
             end.cx = px;
             end.cy = py;
-            if(r->map[py*r->map_width+px] != ' '){
+            if(r->map->data[py*r->map_width+px]){
                 end.hit = 1;
                 break;
             }

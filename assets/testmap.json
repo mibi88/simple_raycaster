@@ -1,0 +1,32 @@
+{
+    "tiles": [
+        {
+            "color": "#000000",
+            "texture": "wall"
+        },
+        {
+            "color": "#AC3232",
+            "texture": "wood"
+        }
+    ],
+    "sprites": [
+        {
+            "x": 1.5,
+            "y": 2.5,
+            "texture": "sprite",
+            "visible": true
+        },
+        {
+            "x": 8.5,
+            "y": 8.5,
+            "texture": "sprite",
+            "visible": true
+        },
+        {
+            "x": 8.5,
+            "y": 9.5,
+            "texture": "sprite",
+            "visible": true
+        }
+    ]
+}
