@@ -113,9 +113,9 @@ void raycaster_render_map(Raycaster *r) {
 int _raycaster_sort_sprites(const void *item1, const void *item2) {
     Sprite *sprite1 = (Sprite*)item1;
     Sprite *sprite2 = (Sprite*)item2;
-    if(sprite1->dist < sprite2->dist) return -1;
+    if(sprite1->dist < sprite2->dist) return 1;
     if(sprite1->dist == sprite2->dist) return 0;
-    else return 1;
+    else return -1;
 }
 
 void raycaster_render_world(Raycaster *r) {
@@ -200,14 +200,13 @@ void raycaster_render_world(Raycaster *r) {
             while(a > TO_FIXED(360)) a -= TO_FIXED(360);
             a = r->r-r->fov/2-a;
             a = TO_FIXED(r->fov/2)-a;
-            /*if(a > 270 && r->r < 90) a += TO_FIXED(360);
-            if(r->r > 270 && a < 90) a -= TO_FIXED(360);*/
             h = TO_INT(DIV(TO_FIXED(r->height),
                            (sprite->dist ? sprite->dist : 1)));
             no_clip_h = h;
             if(h > r->height) h = r->height;
             x = TO_INT(a/r->fov*r->width);
             inc = TO_FIXED(sprite->texture->width)/no_clip_h;
+            printf("%d, %d\n", x, TO_INT(a));
             if(x+no_clip_h/2 >= 0 && x-no_clip_h/2 < r->width){
                 for(t=0,i=x-no_clip_h/2;i<x+no_clip_h/2;i++,t++){
                     if(i >= 0 && i < r->width){
